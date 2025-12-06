@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Training Schedule Generator v2.1</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .input-group label { display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.25rem; }
+        .input-group input:not([type="checkbox"]):not([type="file"]), .input-group select, .input-group textarea { 
+            width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; transition: border-color 0.2s; 
+        }
+        .input-group input:focus, .input-group textarea:focus { outline: none; border-color: #2563eb; ring: 2px solid #93c5fd; }
+        .input-group.error input, .input-group.error textarea { border-color: #ef4444; }
+
+        .checkbox-wrapper { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .checkbox-label { display: flex; align-items: center; background: #fff; padding: 0.25rem 0.75rem; border: 1px solid #e5e7eb; border-radius: 9999px; cursor: pointer; font-size: 0.85rem; user-select: none; transition: all 0.2s; }
+        .checkbox-label:hover { border-color: #2563eb; }
+        .checkbox-label input:checked + span { color: #2563eb; font-weight: bold; }
+        
+        .editable-input { width: 100%; border: none; background: transparent; padding: 4px; font-family: inherit; }
+        .editable-input:focus { background: #eff6ff; outline: 1px solid #2563eb; border-radius: 4px; }
+        
+        /* Save Indicator */
+        #saveIndicator { transition: opacity 0.5s; opacity: 0; }
+        #saveIndicator.show { opacity: 1; }
+
+        .fade-in { animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Custom Styles for Excluded Dates List */
+        .excluded-date-item { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 0.25rem 0.5rem; border-radius: 0.375rem; margin-top: 0.25rem; border: 1px solid #e5e7eb; }
+    </style>
+</head>
+<body class="text-gray-800 min-h-screen p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto bg-white shadow-xl rounded-xl overflow-hidden fade-in">
+        
+        <header class="bg-slate-900 text-white p-6 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center">
+            <div>
+                <h1 class="text-2xl font-bold">Training Schedule Generator</h1>
+                <p class="text-slate-400 text-sm mt-1">Professional Planning Tool</p>
+            </div>
+            <div class="flex items-center gap-4 mt-3 sm:mt-0">
+                <span id="saveIndicator" class="text-xs text-green-400 font-semibold flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    Saved locally
+                </span>
+                <button onclick="resetData()" class="text-xs bg-slate-700 hover:bg-slate-600 text-white py-2 px-3 rounded transition">
+                    Reset / New
+                </button>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4">
+            
+            <div class="lg:col-span-1 bg-gray-50 p-6 border-r border-gray-200 flex flex-col gap-4"> 
+                <h2 class="text-lg font-bold text-gray-700 mb-1">Course Details</h2>
+                
+                <div class="input-group">
+                    <label>Trainee Name <span class="text-red-500">*</span></label>
+                    <input type="text" id="traineeName" placeholder="e.g. Basel" oninput="saveState()">
+                </div>
+
+                <div class="input-group">
+                    <label>Course Name <span class="text-red-500">*</span></label>
+                    <input type="text" id="courseName" placeholder="e.g. Advanced Excel Training" oninput="saveState()">
+                </div>
+
+                <div class="input-group">
+                    <label>Company Logo (For PDF)</label>
+                    <input type="file" id="logoUpload" accept="image/*">
+                    <p class="text-xs text-gray-400 mt-1">Will be displayed on the top right.</p>
+                    <div id="logoPreview" class="mt-2 hidden">
+                        <img id="logoImg" class="w-20 h-20 object-contain border p-1 bg-white rounded shadow-sm" alt="Logo Preview">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Course Topics (One per line)</label>
+                    <textarea id="courseTopics" rows="4" placeholder="- Intro to Management&#10;- Team Building" oninput="saveState()"></textarea>
+                </div>
+
+                <div class="input-group">
+                    <label>Start Date <span class="text-red-500">*</span></label>
+                    <input type="date" id="startDate" oninput="saveState()">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="input-group">
+                        <label>Start Time <span class="text-red-500">*</span></label>
+                        <input type="time" id="startTime" value="09:00" oninput="saveState()">
+                    </div>
+                    <div class="input-group">
+                        <label>Hours/Day <span class="text-red-500">*</span></label>
+                        <input type="number" id="dailyHours" value="4" min="0.5" step="0.5" oninput="saveState()">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Total Course Hours <span class="text-red-500">*</span></label>
+                    <input type="number" id="totalHours" value="40" min="1" oninput="saveState()">
+                </div>
+
+                <div class="input-group">
+                    <label>Training Days <span class="text-red-500">*</span></label>
+                    <div class="flex gap-2 mb-2">
+                        <button onclick="setDaysPreset(1)" class="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded">Sun-Thu</button>
+                        <button onclick="setDaysPreset(2)" class="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded">Mon-Fri</button>
+                        <button onclick="setDaysPreset(3)" class="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded">All Week</button>
+                    </div>
+                    <div class="checkbox-wrapper" id="dayCheckboxes">
+                        <label class="checkbox-label"><input type="checkbox" class="day-select hidden" value="0" onchange="saveState()"> <span>Sun</span></label>
+                        <label class="checkbox-label"><input type="checkbox" class="day-select hidden" value="1" onchange="saveState()"> <span>Mon</span></label>
+                        <label class="checkbox-label"><input type="checkbox" class="day-select hidden" value="2" onchange="saveState()"> <span>Tue</span></label>
+                        <label class="checkbox-label"><input type="checkbox" class="day-select hidden" value="3" onchange="saveState()"> <span>Wed</span></label>
+                        <label class="checkbox-label"><input type="checkbox" class="day-select hidden" value="4" onchange="saveState()"> <span>Thu</span></label>
+                        <label class="checkbox-label"><input type="checkbox" class="day-select hidden" value="5" onchange="saveState()"> <span>Fri</span></label>
+                        <label class="checkbox-label"><input type="checkbox" class="day-select hidden" value="6" onchange="saveState()"> <span>Sat</span></label>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Excluded Dates (Holidays)</label>
+                    <div class="flex gap-2">
+                        <input type="date" id="newExcludedDate">
+                        <button onclick="addExcludedDate()" class="bg-gray-400 hover:bg-gray-500 text-white py-1 px-3 rounded">+</button>
+                    </div>
+                    <div id="excludedDatesList" class="text-sm mt-1">
+                        </div>
+                </div>
+
+                <button onclick="generateSchedule()" class="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded transition shadow-lg" id="generateButton">
+                    Generate Schedule
+                </button>
+            </div>
+
+            <div class="lg:col-span-3 p-4 sm:p-6 flex flex-col h-full bg-white">
+                
+                <div id="placeholder" class="flex-1 flex flex-col items-center justify-center text-gray-400">
+                    <svg class="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <p>Enter details and click Generate.</p>
+                </div>
+
+                <div id="resultsArea" class="hidden flex flex-col h-full">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
+                        <div>
+                            <h3 class="text-xl sm:text-2xl font-bold text-gray-800">Generated Schedule</h3>
+                            <p class="text-sm text-gray-500">Review and edit before exporting.</p>
+                            <p class="mt-2 text-sm font-semibold">Total Hours: <span id="hoursSummary" class="text-blue-600">0</span> / <span id="targetHoursSummary" class="text-gray-500">0</span></p>
+                        </div>
+                        <div class="flex gap-2 w-full md:w-auto">
+                            <button onclick="exportExcel()" class="flex-1 md:flex-none bg-green-600 hover:bg-green-700 text-white text-sm font-semibold py-2 px-4 rounded flex items-center justify-center gap-2 shadow">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                Excel
+                            </button>
+                            <button onclick="exportPDF()" class="flex-1 md:flex-none bg-red-600 hover:bg-red-700 text-white text-sm font-semibold py-2 px-4 rounded flex items-center justify-center gap-2 shadow">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                PDF
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead>
+                                <tr class="bg-gray-50">
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Day</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hrs</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rem.</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="scheduleBody" class="bg-white divide-y divide-gray-200 text-xs sm:text-sm">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSchedule = [];
+        let logoBase64 = null;
+        let excludedDatesArray = [];
+        const daysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const STORAGE_KEY = 'training_app_data_v2'; 
+
+        // --- Logo File Handling ---
+        document.getElementById('logoUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const previewDiv = document.getElementById('logoPreview');
+            const previewImg = document.getElementById('logoImg');
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    logoBase64 = event.target.result;
+                    previewImg.src = logoBase64;
+                    previewDiv.classList.remove('hidden');
+                    saveState();
+                };
+                reader.readAsDataURL(file);
+            } else {
+                logoBase64 = null;
+                previewDiv.classList.add('hidden');
+                previewImg.src = '';
+                saveState();
+            }
+        });
+        
+        // --- Excluded Dates Logic ---
+        function addExcludedDate() {
+            const dateInput = document.getElementById('newExcludedDate');
+            const newDate = dateInput.value.trim();
+
+            if (newDate && !excludedDatesArray.includes(newDate)) {
+                excludedDatesArray.push(newDate);
+                dateInput.value = '';
+                renderExcludedDatesList();
+                saveState();
+            }
+        }
+
+        function removeExcludedDate(dateToRemove) {
+            excludedDatesArray = excludedDatesArray.filter(date => date !== dateToRemove);
+            renderExcludedDatesList();
+            saveState();
+        }
+
+        function renderExcludedDatesList() {
+            const listDiv = document.getElementById('excludedDatesList');
+            listDiv.innerHTML = '';
+
+            excludedDatesArray.sort().forEach(date => {
+                const item = document.createElement('div');
+                item.className = 'excluded-date-item';
+                item.innerHTML = `
+                    <span class="text-gray-700">${date}</span>
+                    <button onclick="removeExcludedDate('${date}')" class="text-red-500 hover:text-red-700 text-xs font-bold p-1 transition">
+                        &times;
+                    </button>
+                `;
+                listDiv.appendChild(item);
+            });
+        }
+        
+        // --- Day Presets ---
+        function setDaysPreset(presetId) {
+            const checkboxes = document.querySelectorAll('.day-select');
+            let selectedDays = [];
+            
+            switch (presetId) {
+                case 1: // Sun-Thu (0-4)
+                    selectedDays = [0, 1, 2, 3, 4];
+                    break;
+                case 2: // Mon-Fri (1-5)
+                    selectedDays = [1, 2, 3, 4, 5];
+                    break;
+                case 3: // All Week (0-6)
+                    selectedDays = [0, 1, 2, 3, 4, 5, 6];
+                    break;
+            }
+
+            checkboxes.forEach(cb => {
+                cb.checked = selectedDays.includes(parseInt(cb.value));
+            });
+            
+            // Apply checkbox styles immediately
+            const labels = document.querySelectorAll('.checkbox-label');
+            labels.forEach(label => {
+                const input = label.querySelector('input');
+                const span = label.querySelector('span');
+                if (input.checked) {
+                    span.classList.add('font-bold', 'text-blue-600');
+                } else {
+                    span.classList.remove('font-bold', 'text-blue-600');
+                }
+            });
+
+            saveState();
+        }
+
+        // --- LOAD/SAVE STATE ---
+        window.addEventListener('DOMContentLoaded', () => {
+            loadState();
+        });
+
+        function saveState() {
+            // Show indicator
+            const indicator = document.getElementById('saveIndicator');
+            indicator.classList.add('show');
+            setTimeout(() => indicator.classList.remove('show'), 2000);
+
+            const data = {
+                traineeName: document.getElementById('traineeName').value,
+                courseName: document.getElementById('courseName').value,
+                courseTopics: document.getElementById('courseTopics').value,
+                startDate: document.getElementById('startDate').value,
+                startTime: document.getElementById('startTime').value,
+                dailyHours: document.getElementById('dailyHours').value,
+                totalHours: document.getElementById('totalHours').value,
+                excludedDatesArray: excludedDatesArray, 
+                selectedDays: Array.from(document.querySelectorAll('.day-select')).map(cb => ({ val: cb.value, checked: cb.checked })),
+                schedule: currentSchedule,
+                logoBase64: logoBase64
+            };
+
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        function loadState() {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) {
+                // Set default days (Mon-Thu) if no saved state
+                setDaysPreset(1); 
+                return;
+            }
+
+            const data = JSON.parse(raw);
+
+            // Restore Inputs
+            document.getElementById('traineeName').value = data.traineeName || '';
+            document.getElementById('courseName').value = data.courseName || '';
+            document.getElementById('courseTopics').value = data.courseTopics || '';
+            document.getElementById('startDate').value = data.startDate || '';
+            document.getElementById('startTime').value = data.startTime || '09:00';
+            document.getElementById('dailyHours').value = data.dailyHours || 4;
+            document.getElementById('totalHours').value = data.totalHours || 40;
+            
+            // Restore Excluded Dates
+            excludedDatesArray = data.excludedDatesArray || [];
+            renderExcludedDatesList(); 
+
+            // Restore Logo
+            logoBase64 = data.logoBase64 || null;
+            if (logoBase64) {
+                document.getElementById('logoImg').src = logoBase64;
+                document.getElementById('logoPreview').classList.remove('hidden');
+            }
+
+            // Restore Checkboxes
+            if (data.selectedDays) {
+                const checkboxes = document.querySelectorAll('.day-select');
+                data.selectedDays.forEach((saved, index) => {
+                    if (checkboxes[index]) checkboxes[index].checked = saved.checked;
+                });
+            }
+
+            // Restore Schedule if exists
+            if (data.schedule && data.schedule.length > 0) {
+                currentSchedule = data.schedule;
+                renderTable();
+                document.getElementById('placeholder').classList.add('hidden');
+                document.getElementById('resultsArea').classList.remove('hidden');
+            }
+        }
+
+        function resetData() {
+            if(confirm('Are you sure you want to clear all data? This cannot be undone.')) {
+                localStorage.removeItem(STORAGE_KEY);
+                location.reload();
+            }
+        }
+        
+        // --- VALIDATION ---
+        function validateInputs() {
+            const requiredFields = ['traineeName', 'courseName', 'startDate', 'startTime', 'dailyHours', 'totalHours'];
+            let isValid = true;
+
+            requiredFields.forEach(id => {
+                const input = document.getElementById(id);
+                const group = input.closest('.input-group');
+                if (!input.value || (input.type === 'number' && parseFloat(input.value) <= 0)) {
+                    group.classList.add('error');
+                    isValid = false;
+                } else {
+                    group.classList.remove('error');
+                }
+            });
+
+            const selectedDays = document.querySelectorAll('.day-select:checked');
+            const dayWrapper = document.getElementById('dayCheckboxes').closest('.input-group');
+            if (selectedDays.length === 0) {
+                dayWrapper.classList.add('error');
+                isValid = false;
+            } else {
+                dayWrapper.classList.remove('error');
+            }
+            
+            if (!isValid) {
+                alert("Please fill in all required fields marked with * and ensure numerical values are greater than zero.");
+            }
+            return isValid;
+        }
+
+        // --- GENERATION LOGIC ---
+        function generateSchedule() {
+            if (!validateInputs()) return;
+            
+            document.getElementById('generateButton').disabled = true;
+
+            const startDateVal = document.getElementById('startDate').value;
+            const startTimeVal = document.getElementById('startTime').value;
+            const dailyHours = parseFloat(document.getElementById('dailyHours').value);
+            const totalHours = parseFloat(document.getElementById('totalHours').value);
+
+            const checkboxes = document.querySelectorAll('.day-select:checked');
+            const selectedDays = Array.from(checkboxes).map(cb => parseInt(cb.value));
+
+            let schedule = [];
+            let accumulatedHours = 0;
+            let currentDate = new Date(startDateVal);
+            
+            currentDate.setHours(12, 0, 0, 0); 
+            
+            let sessionCount = 1;
+
+            while (accumulatedHours < totalHours) {
+                if (sessionCount > 365) {
+                    alert("Schedule generation stopped after 365 days. Total hours requested might be too high or days are too few.");
+                    break;
+                }
+
+                const dayOfWeek = currentDate.getDay();
+                const dateString = currentDate.toISOString().split('T')[0];
+
+                if (selectedDays.includes(dayOfWeek) && !excludedDatesArray.includes(dateString)) {
+                    let hoursToday = dailyHours;
+                    if (accumulatedHours + hoursToday > totalHours) {
+                        hoursToday = totalHours - accumulatedHours;
+                    }
+
+                    const [startHours, startMinutes] = startTimeVal.split(':').map(Number);
+                    const startT = new Date(2000, 0, 1, startHours, startMinutes);
+                    const endT = new Date(startT.getTime() + hoursToday * 60 * 60 * 1000);
+                    const endTimeVal = endT.toTimeString().slice(0, 5);
+
+                    schedule.push({
+                        id: sessionCount,
+                        date: dateString,
+                        day: daysMap[dayOfWeek],
+                        startTime: startTimeVal,
+                        endTime: endTimeVal,
+                        hours: hoursToday,
+                        remaining: 0 
+                    });
+
+                    accumulatedHours += hoursToday;
+                    sessionCount++;
+                }
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+
+            currentSchedule = schedule;
+            renderTable();
+            saveState();
+            
+            document.getElementById('placeholder').classList.add('hidden');
+            document.getElementById('resultsArea').classList.remove('hidden');
+            document.getElementById('generateButton').disabled = false;
+        }
+
+        // --- TABLE RENDERING & EDITING (Optimized) ---
+        function renderTable() {
+            const tbody = document.getElementById('scheduleBody');
+            tbody.innerHTML = '';
+            let runningTotal = 0;
+            const targetTotal = parseFloat(document.getElementById('totalHours').value);
+            
+            currentSchedule.forEach((row, index) => {
+                const hours = parseFloat(row.hours);
+                runningTotal += hours;
+                const remaining = Math.max(0, targetTotal - runningTotal);
+
+                row.remaining = remaining; 
+
+                const tr = document.createElement('tr');
+
+                tr.innerHTML = `
+                    <td class="px-3 py-4 font-medium text-gray-900">${row.id}</td>
+                    <td class="px-3 py-4"><input type="date" class="editable-input text-xs" value="${row.date}" onchange="updateRow(${index}, 'date', this.value)"></td>
+                    <td class="px-3 py-4 text-gray-500">${row.day.slice(0, 3)}</td>
+                    <td class="px-3 py-4 text-xs">
+                        <div class="flex flex-col items-center justify-center gap-0.5">
+                            <input type="time" class="editable-input w-20 text-xs" value="${row.startTime}" onchange="updateRow(${index}, 'startTime', this.value)">
+                            <span class="text-gray-400">-</span>
+                            <span class="text-gray-600 font-semibold">${row.endTime}</span>
+                        </div>
+                    </td>
+                    <td class="px-3 py-4"><input type="number" class="editable-input w-12 text-xs" value="${hours}" step="0.5" min="0.5" onchange="updateRow(${index}, 'hours', this.value)"></td>
+                    <td class="px-3 py-4 font-bold text-xs ${remaining > 0 ? 'text-blue-600' : 'text-green-600'}">${remaining.toFixed(1)}</td>
+                    <td class="px-3 py-4">
+                        <button onclick="deleteRow(${index})" class="text-red-500 hover:text-red-700 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            // Update Summary
+            document.getElementById('hoursSummary').textContent = runningTotal.toFixed(1);
+            document.getElementById('targetHoursSummary').textContent = targetTotal.toFixed(1);
+        }
+
+        function updateRow(index, field, value) {
+            const row = currentSchedule[index];
+            
+            if (field === 'hours') {
+                value = parseFloat(value);
+                if (isNaN(value) || value <= 0) {
+                    alert("Hours must be a positive number.");
+                    renderTable(); 
+                    return;
+                }
+                row.hours = value;
+            } else if (field === 'date') {
+                const d = new Date(value);
+                row.day = daysMap[d.getDay()];
+                row.date = value;
+            } else if (field === 'startTime') {
+                row.startTime = value;
+            }
+            
+            // Re-calculate end time for current row
+            const [startHours, startMinutes] = row.startTime.split(':').map(Number);
+            const startT = new Date(2000, 0, 1, startHours, startMinutes);
+            const endT = new Date(startT.getTime() + row.hours * 60 * 60 * 1000);
+            row.endTime = endT.toTimeString().slice(0, 5);
+
+            renderTable();
+            saveState();
+        }
+        
+        function deleteRow(index) {
+            if (confirm("Are you sure you want to remove this session?")) {
+                currentSchedule.splice(index, 1);
+                currentSchedule.forEach((row, i) => row.id = i + 1); 
+                renderTable();
+                saveState();
+            }
+        }
+        
+        // --- EXPORT FUNCTIONS (No change in logic, only updated HTML/classes/values in renderTable) ---
+        function exportPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            const trainee = document.getElementById('traineeName').value || "Trainee";
+            const course = document.getElementById('courseName').value || "Course";
+            
+            const rawTopics = document.getElementById('courseTopics').value;
+            const topics = rawTopics.split('\n').filter(t => t.trim() !== '');
+
+            // Header Section
+            doc.setFillColor(30, 41, 59);
+            doc.rect(0, 0, 210, 40, 'F');
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(22);
+            doc.text("Training Schedule", 14, 20);
+            
+            doc.setFontSize(10);
+            doc.setTextColor(200, 200, 200);
+            doc.text(`Course: ${course}`, 14, 30);
+            doc.text(`Trainee: ${trainee}`, 14, 35);
+            const genDate = new Date().toLocaleDateString('en-GB'); 
+            doc.text(`Generated By X Academy: ${genDate}`, 120, 35);
+
+            // Logo Integration
+            if (logoBase64) {
+                try {
+                    const imgFormat = logoBase64.substring("data:image/".length, logoBase64.indexOf(";base64")).toUpperCase();
+                    doc.addImage(logoBase64, imgFormat, 170, 5, 30, 30);  
+                } catch (e) {
+                    console.error("Error adding logo to PDF:", e);
+                }
+            }
+
+            let tableStartY = 50;
+
+            // Topics Section
+            if (topics.length > 0) {
+                doc.setTextColor(40, 40, 40);
+                doc.setFontSize(12);
+                doc.setFont(undefined, 'bold');
+                doc.text("Course Outline / Topics:", 14, 55);
+                
+                doc.setFont(undefined, 'normal');
+                doc.setFontSize(10);
+                
+                let topicY = 62;
+                topics.forEach(topic => {
+                    doc.setFillColor(37, 99, 235);
+                    doc.circle(16, topicY - 1, 1, 'F');  
+                    doc.text(topic, 20, topicY);
+                    topicY += 6; 
+                });
+
+                tableStartY = topicY + 10;
+            }
+
+            // Table Section
+            const tableData = currentSchedule.map(row => [
+                row.id, row.date, row.day, `${row.startTime} - ${row.endTime}`, row.hours.toFixed(1) + ' hrs' 
+            ]);
+            
+            // Add Total Hours row
+            const totalHours = currentSchedule.reduce((sum, row) => sum + row.hours, 0);
+            tableData.push(['', '', '', { content: 'TOTAL HOURS', styles: { fontStyle: 'bold', fillColor: [200, 200, 200] } }, { content: totalHours.toFixed(1) + ' hrs', styles: { fontStyle: 'bold', fillColor: [200, 200, 200] } }]);
+
+
+            doc.autoTable({
+                head: [['#', 'Date', 'Day', 'Time', 'Duration']],
+                body: tableData,
+                startY: tableStartY,
+                theme: 'grid',
+                headStyles: { fillColor: [37, 99, 235], textColor: 255, fontStyle: 'bold' },
+                styles: { fontSize: 10, cellPadding: 4 },
+                alternateRowStyles: { fillColor: [243, 244, 246] }
+            });
+
+            // Footer
+            doc.setFontSize(8);
+            doc.setTextColor(150);
+            doc.text("Approved By: ___________________", 14, doc.internal.pageSize.height - 20);
+            
+            doc.save(`${course}_${trainee}_Schedule.pdf`);
+        }
+
+        function exportExcel() {
+            const trainee = document.getElementById('traineeName').value || "Trainee";
+            const course = document.getElementById('courseName').value || "Course";
+            
+            const ws_data = [
+                ["TRAINING SCHEDULE"],
+                ["Course Name", course],
+                ["Trainee Name", trainee],
+                ["Generated Date", new Date().toLocaleDateString()],
+                [""]
+            ];
+
+            const rawTopics = document.getElementById('courseTopics').value;
+            if (rawTopics.trim()) {
+                ws_data.push(["Course Topics:"]);
+                const topics = rawTopics.split('\n').filter(t => t.trim() !== '');
+                topics.forEach(t => ws_data.push(["• " + t]));
+                ws_data.push([""]);  
+            }
+
+            ws_data.push(["Session", "Date", "Day", "Start Time", "End Time", "Duration (Hrs)"]);
+
+            currentSchedule.forEach(row => {
+                ws_data.push([
+                    row.id, row.date, row.day, row.startTime, row.endTime, row.hours
+                ]);
+            });
+
+            // Add Total Hours row
+            const totalHours = currentSchedule.reduce((sum, row) => sum + row.hours, 0);
+            ws_data.push(["", "", "", "", "TOTAL HOURS", totalHours.toFixed(1)]);
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(ws_data);
+            ws['!cols'] = [{wch: 15}, {wch: 15}, {wch: 15}, {wch: 12}, {wch: 12}, {wch: 15}];
+
+            XLSX.utils.book_append_sheet(wb, ws, "Schedule");
+            XLSX.writeFile(wb, `${course}_${trainee}_Schedule.xlsx`);
+        }
+    </script>
+</body>
+</html>
