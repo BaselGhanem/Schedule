@@ -149,7 +149,7 @@
                                 <span class="text-xs text-white/50">PNG, JPG, SVG</span>
                             </div>
                             <input type="file" id="logoUpload" accept="image/*" class="hidden">
-                            <img id="logoPreview" class="w-10 h-10 object-contain hidden" alt="Preview">
+                            <img id="logoPreview" src="https://raw.githubusercontent.com/BaselGhanem/Schedule/refs/heads/main/X%20Academy%20Log%20(1).png" class="w-10 h-10 object-contain" alt="Preview" crossorigin="anonymous">
                         </label>
                     </div>
                 </div>
@@ -374,22 +374,29 @@
         let logoBase64 = null;
 
         /* --- INITIALIZATION --- */
-        // Load default logo on start
+        // Convert the default image to Base64 specifically for PDF export
         window.addEventListener('DOMContentLoaded', () => {
-            fetch(defaultLogoUrl)
-                .then(response => response.blob())
-                .then(blob => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                        logoBase64 = reader.result;
-                        const preview = document.getElementById('logoPreview');
-                        preview.src = logoBase64;
-                        preview.classList.remove('hidden');
-                    };
-                    reader.readAsDataURL(blob);
-                })
-                .catch(err => console.log('Could not load default logo:', err));
+            const img = document.getElementById('logoPreview');
+            // Wait for image to load naturally
+            if (img.complete) {
+                convertImageToBase64(img);
+            } else {
+                img.onload = () => convertImageToBase64(img);
+            }
         });
+
+        function convertImageToBase64(imgElement) {
+            try {
+                const canvas = document.createElement("canvas");
+                canvas.width = imgElement.naturalWidth;
+                canvas.height = imgElement.naturalHeight;
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(imgElement, 0, 0);
+                logoBase64 = canvas.toDataURL("image/png");
+            } catch(e) {
+                console.log("Could not convert default logo for PDF (CORS restrictions likely). It will still show on screen.");
+            }
+        }
 
 
         /* --- NAVIGATION LOGIC --- */
@@ -707,7 +714,6 @@
                 reader.onload = function(evt) {
                     logoBase64 = evt.target.result;
                     document.getElementById('logoPreview').src = logoBase64;
-                    document.getElementById('logoPreview').classList.remove('hidden');
                 };
                 reader.readAsDataURL(file);
             }
