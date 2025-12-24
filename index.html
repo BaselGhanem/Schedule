@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Professional Training Schedule Generator v3.0</title>
+    <title>Professional Training Schedule Generator v3.1 (Fixed)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -87,7 +87,6 @@
                     <input type="text" id="traineeName" placeholder="e.g. Basel" oninput="saveState()">
                 </div>
 
-                <!-- NEW: Course Selection Dropdown -->
                 <div class="input-group">
                     <label>Select Course <span class="text-red-500">*</span></label>
                     <select id="courseSelect" onchange="handleCourseSelection(); saveState();">
@@ -98,7 +97,6 @@
                     </select>
                 </div>
 
-                <!-- REFINED: Single Course Name Input (Read-only for predefined, editable for custom) -->
                 <div class="input-group">
                     <label>Course Name <span class="text-red-500">*</span></label>
                     <input type="text" id="courseName" placeholder="Course name will be set automatically or enter custom name" oninput="saveState()">
@@ -113,7 +111,6 @@
                     </div>
                 </div>
 
-                <!-- REFINED: Course Topics Textarea (Read-only for predefined, editable for custom) -->
                 <div class="input-group" id="courseTopicsGroup">
                     <label>Course Topics (One per line) <span class="text-red-500">*</span></label>
                     <textarea id="courseTopics" rows="8" placeholder="Topics will be loaded automatically or enter custom topics here." oninput="saveState()"></textarea>
@@ -214,8 +211,7 @@
                                 </tr>
                             </thead>
                             <tbody id="scheduleTableBody" class="bg-white divide-y divide-gray-200">
-                                <!-- Schedule rows will be inserted here -->
-                            </tbody>
+                                </tbody>
                         </table>
                     </div>
                 </div>
@@ -384,8 +380,11 @@
             document.getElementById('placeholder').classList.add('hidden');
             document.getElementById('resultsArea').classList.remove('hidden');
 
-            let currentDate = new Date(startDateStr);
-            currentDate.setHours(0, 0, 0, 0); // Normalize to start of day
+            // --- DATE FIX START ---
+            // Explicitly parse the YYYY-MM-DD string to avoid Timezone offset issues
+            const [startY, startM, startD] = startDateStr.split('-').map(Number);
+            let currentDate = new Date(startY, startM - 1, startD); // Months are 0-indexed in JS
+            // --- DATE FIX END ---
             
             let hoursScheduled = 0;
             let schedule = [];
@@ -396,16 +395,21 @@
 
             while (hoursScheduled < totalHours && iterationCount < maxIterations) {
                 const dayOfWeek = currentDate.getDay(); // 0 = Sunday, 6 = Saturday
-                const dateStr = currentDate.toISOString().split('T')[0];
+                
+                // Construct Date String Manually to ensure it stays in local time
+                const year = currentDate.getFullYear();
+                const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+                const day = String(currentDate.getDate()).padStart(2, '0');
+                const dateStr = `${year}-${month}-${day}`;
 
                 if (selectedDays.includes(dayOfWeek) && !excludedDates.includes(dateStr)) {
                     let hoursForThisSession = Math.min(dailyHours, totalHours - hoursScheduled);
                     
                     if (hoursForThisSession > 0) {
                         const [startHours, startMinutes] = startTimeStr.split(':').map(Number);
-                        const startT = new Date(currentDate);
-                        startT.setHours(startHours, startMinutes, 0, 0);
-
+                        
+                        // We use a dummy date for time calculation to preserve the time logic independently
+                        const startT = new Date(2000, 0, 1, startHours, startMinutes);
                         const endT = new Date(startT.getTime() + hoursForThisSession * 60 * 60 * 1000);
                         
                         schedule.push({
@@ -485,8 +489,10 @@
                 }
                 row.hours = value;
             } else if (field === 'date') {
-                const d = new Date(value);
-                row.day = daysMap[d.getDay()];
+                // Fix date parsing for manual update as well
+                const [y, m, d] = value.split('-').map(Number);
+                const dateObj = new Date(y, m-1, d);
+                row.day = daysMap[dateObj.getDay()];
                 row.date = value;
             } else if (field === 'startTime') {
                 row.startTime = value;
@@ -630,19 +636,19 @@
             const topics = rawTopics.split('\n').filter(t => t.trim() !== '');
 
            // Header Section
-doc.setFillColor(0, 102, 102); // متناسق مع #099999
-doc.rect(0, 0, 210, 40, 'F');
+            doc.setFillColor(0, 102, 102); // Consistent with #099999
+            doc.rect(0, 0, 210, 40, 'F');
 
-doc.setTextColor(255, 255, 255);
-doc.setFontSize(22);
-doc.text("Training Schedule", 14, 20);
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(22);
+            doc.text("Training Schedule", 14, 20);
 
-doc.setFontSize(10);
-doc.setTextColor(200, 200, 200);
-doc.text(`Course: ${course}`, 14, 30);
-doc.text(`Trainee: ${trainee}`, 14, 35);
-const genDate = new Date().toLocaleDateString('en-GB'); 
-doc.text(`Date: ${genDate}`, 120, 35);
+            doc.setFontSize(10);
+            doc.setTextColor(200, 200, 200);
+            doc.text(`Course: ${course}`, 14, 30);
+            doc.text(`Trainee: ${trainee}`, 14, 35);
+            const genDate = new Date().toLocaleDateString('en-GB'); 
+            doc.text(`Date: ${genDate}`, 120, 35);
 
 
             // Logo Integration
@@ -677,38 +683,40 @@ doc.text(`Date: ${genDate}`, 120, 35);
 
                 tableStartY = topicY + 10;
             }
-// Table Section
-const tableData = currentSchedule.map(row => {
-    const dateObj = new Date(row.date);
-    const formattedDate = `${String(dateObj.getDate()).padStart(2,'0')}/${String(dateObj.getMonth()+1).padStart(2,'0')}/${dateObj.getFullYear()}`;
-    return [
-        row.id,
-        formattedDate,
-        row.day,
-        `${row.startTime} - ${row.endTime}`,
-        row.hours.toFixed(1) + ' hrs'
-    ];
-});
 
-// Add Total Hours row
-const totalHours = currentSchedule.reduce((sum, row) => sum + row.hours, 0);
-tableData.push([
-    '',
-    '',
-    '',
-    { content: 'Total Hours', styles: { fontStyle: 'bold', fillColor: [200, 200, 200] } },
-    { content: totalHours.toFixed(1) + ' hrs', styles: { fontStyle: 'bold', fillColor: [200, 200, 200] } }
-]);
+            // Table Section
+            const tableData = currentSchedule.map(row => {
+                // FIXED: Direct string splitting to avoid Date object timezone shift
+                const [y, m, d] = row.date.split('-');
+                const formattedDate = `${d}/${m}/${y}`;
+                return [
+                    row.id,
+                    formattedDate,
+                    row.day,
+                    `${row.startTime} - ${row.endTime}`,
+                    row.hours.toFixed(1) + ' hrs'
+                ];
+            });
 
-doc.autoTable({
-    head: [['#', 'Date', 'Day', 'Time', 'Duration']],
-    body: tableData,
-    startY: tableStartY,
-    theme: 'grid',
-    headStyles: { fillColor: [9, 153, 153], textColor: 255, fontStyle: 'bold' },
-    styles: { fontSize: 10, cellPadding: 4 },
-    alternateRowStyles: { fillColor: [243, 244, 246] }
-});
+            // Add Total Hours row
+            const totalHours = currentSchedule.reduce((sum, row) => sum + row.hours, 0);
+            tableData.push([
+                '',
+                '',
+                '',
+                { content: 'Total Hours', styles: { fontStyle: 'bold', fillColor: [200, 200, 200] } },
+                { content: totalHours.toFixed(1) + ' hrs', styles: { fontStyle: 'bold', fillColor: [200, 200, 200] } }
+            ]);
+
+            doc.autoTable({
+                head: [['#', 'Date', 'Day', 'Time', 'Duration']],
+                body: tableData,
+                startY: tableStartY,
+                theme: 'grid',
+                headStyles: { fillColor: [9, 153, 153], textColor: 255, fontStyle: 'bold' },
+                styles: { fontSize: 10, cellPadding: 4 },
+                alternateRowStyles: { fillColor: [243, 244, 246] }
+            });
 
 
             // Footer
@@ -716,7 +724,7 @@ doc.autoTable({
             doc.setTextColor(150);
             doc.text("Approved By: ___________________", 14, doc.internal.pageSize.height - 20);
             
-doc.save(`${trainee}_Schedule.pdf`);
+            doc.save(`${trainee}_Schedule.pdf`);
         }
 
         function exportExcel() {
