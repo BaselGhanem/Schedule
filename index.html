@@ -145,7 +145,7 @@
                                 <i class="fa-solid fa-cloud-arrow-up text-xl text-teal-300"></i>
                             </div>
                             <div class="flex-1">
-                                <span class="block font-medium">Upload Logo</span>
+                                <span class="block font-medium">Change Logo</span>
                                 <span class="text-xs text-white/50">PNG, JPG, SVG</span>
                             </div>
                             <input type="file" id="logoUpload" accept="image/*" class="hidden">
@@ -364,12 +364,33 @@
             }
         };
 
+        const defaultLogoUrl = "https://raw.githubusercontent.com/BaselGhanem/Schedule/refs/heads/main/X%20Academy%20Log%20(1).png";
+
         /* --- STATE --- */
         let currentStep = 1;
         const totalSteps = 5;
         let scheduleData = [];
         let excludedDates = [];
         let logoBase64 = null;
+
+        /* --- INITIALIZATION --- */
+        // Load default logo on start
+        window.addEventListener('DOMContentLoaded', () => {
+            fetch(defaultLogoUrl)
+                .then(response => response.blob())
+                .then(blob => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        logoBase64 = reader.result;
+                        const preview = document.getElementById('logoPreview');
+                        preview.src = logoBase64;
+                        preview.classList.remove('hidden');
+                    };
+                    reader.readAsDataURL(blob);
+                })
+                .catch(err => console.log('Could not load default logo:', err));
+        });
+
 
         /* --- NAVIGATION LOGIC --- */
         function changeStep(dir) {
@@ -443,7 +464,7 @@
                 if (!type) { alert("Please select a course path."); return false; }
                 if (type.value === 'other') {
                     if (!document.getElementById('courseName').value.trim()) {
-                         alert("Please enter a custom course name."); return false; 
+                          alert("Please enter a custom course name."); return false; 
                     }
                 }
             }
@@ -628,9 +649,12 @@
             // Logo
             if (logoBase64) {
                  try {
-                    const format = logoBase64.split(';')[0].split('/')[1].toUpperCase();
+                    // Check if it's base64 or URL (though we try to convert to base64 always now)
+                    const format = 'PNG'; 
                     doc.addImage(logoBase64, format, 170, 5, 30, 30);
-                 } catch(e) {}
+                 } catch(e) {
+                     console.log("Image error", e);
+                 }
             }
 
             // Table
