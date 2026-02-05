@@ -16,7 +16,7 @@
 
     <style>
         :root {
-            --primary: #099999; /* Your preferred color */
+            --primary: #099999;
             --primary-dark: #077a7a;
             --glass-bg: rgba(16, 24, 39, 0.7);
             --glass-border: rgba(255, 255, 255, 0.08);
@@ -27,6 +27,8 @@
             background: #020617;
             color: #e2e8f0;
             overflow-x: hidden;
+            /* Prevent pull-to-refresh on mobile */
+            overscroll-behavior-y: none;
         }
 
         /* Ambient Background Animation */
@@ -97,7 +99,7 @@
         }
 
         /* Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
@@ -113,27 +115,32 @@
             box-shadow: 0 0 20px rgba(9, 153, 153, 0.4);
             transform: translateY(-1px);
         }
+        
+        /* Mobile Specific Overrides for inputs to prevent zoom */
+        @media (max-width: 768px) {
+            input, select, textarea { font-size: 16px !important; }
+        }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
+<body class="min-h-screen flex items-center justify-center p-0 md:p-4">
 
     <div class="ambient-bg"></div>
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
 
-    <div class="glass-panel w-full max-w-5xl rounded-3xl overflow-hidden flex flex-col md:flex-row h-[85vh] md:h-[800px]">
+    <div class="glass-panel w-full max-w-5xl md:rounded-3xl rounded-none overflow-hidden flex flex-col md:flex-row h-[100dvh] md:h-[800px]">
         
-        <div class="w-full md:w-72 bg-black/20 p-8 flex flex-col border-b md:border-b-0 md:border-r border-white/5 relative overflow-hidden">
-            <div class="flex items-center gap-3 mb-10 z-10">
-                <div class="w-10 h-10 rounded-xl bg-[#099999] flex items-center justify-center text-white font-bold text-xl shadow-[0_0_15px_#099999aa]">
+        <div class="w-full md:w-72 bg-black/20 p-5 md:p-8 flex flex-row md:flex-col justify-between items-center md:items-start border-b md:border-b-0 md:border-r border-white/5 relative shrink-0 z-20">
+            <div class="flex items-center gap-3 md:mb-10 z-10">
+                <div class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-[#099999] flex items-center justify-center text-white font-bold text-lg md:text-xl shadow-[0_0_15px_#099999aa]">
                     X
                 </div>
                 <div>
-                    <h1 class="font-bold text-lg leading-tight">Schedule<br><span class="text-[#099999]">Wizard</span></h1>
+                    <h1 class="font-bold text-base md:text-lg leading-tight">Schedule<br><span class="text-[#099999]">Wizard</span></h1>
                 </div>
             </div>
 
-            <div class="space-y-1 relative z-10 flex-1">
+            <div class="space-y-1 relative z-10 flex-1 hidden md:block">
                 <div class="step-item flex items-center gap-4 p-3 rounded-xl transition-all duration-300" id="ind-1">
                     <div class="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center text-xs font-bold transition-all">1</div>
                     <span class="text-sm font-medium">Basics</span>
@@ -158,7 +165,14 @@
                 </div>
             </div>
 
-            <div class="mt-auto pt-6 border-t border-white/10 z-10">
+            <div class="md:hidden flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">
+                <span class="text-[10px] text-white/50 uppercase tracking-wider font-bold">Step</span>
+                <span class="text-base font-bold text-[#099999]" id="mobileStepCount">1</span>
+                <span class="text-white/20 text-xs">/</span>
+                <span class="text-xs text-white/50">5</span>
+            </div>
+
+            <div class="mt-auto pt-6 border-t border-white/10 z-10 hidden md:block w-full">
                 <div class="flex items-center gap-3 opacity-60">
                     <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-gray-700 to-gray-600"></div>
                     <div class="text-xs">
@@ -168,39 +182,39 @@
                 </div>
             </div>
             
-            <div class="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-[#099999]/10 to-transparent pointer-events-none"></div>
+            <div class="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-[#099999]/10 to-transparent pointer-events-none hidden md:block"></div>
         </div>
 
-        <div class="flex-1 flex flex-col relative">
+        <div class="flex-1 flex flex-col relative overflow-hidden">
             
-            <div class="p-6 border-b border-white/5 flex justify-between items-center">
-                <h2 class="text-xl font-bold" id="stepTitle">Trainee Details</h2>
-                <button onclick="resetApp()" class="w-8 h-8 rounded-full hover:bg-white/5 flex items-center justify-center transition text-white/50 hover:text-white" title="Reset">
+            <div class="p-5 md:p-6 border-b border-white/5 flex justify-between items-center bg-black/10 backdrop-blur-sm z-10">
+                <h2 class="text-lg md:text-xl font-bold truncate pr-4" id="stepTitle">Trainee Details</h2>
+                <button onclick="resetApp()" class="w-8 h-8 rounded-full hover:bg-white/5 flex items-center justify-center transition text-white/50 hover:text-white shrink-0" title="Reset">
                     <i class="fa-solid fa-rotate-right"></i>
                 </button>
             </div>
 
-            <div class="flex-1 p-6 md:p-10 overflow-y-auto custom-scrollbar">
+            <div class="flex-1 p-5 md:p-10 overflow-y-auto custom-scrollbar">
                 
                 <div id="step-1" class="step-content active max-w-lg mx-auto">
                     <div class="space-y-6">
                         <div>
                             <label class="block text-xs font-bold text-[#099999] uppercase tracking-wider mb-2">Trainee Name</label>
-                            <input type="text" id="traineeName" class="custom-input w-full p-4 rounded-xl text-lg placeholder-white/20" placeholder="e.g. Ahmad Ali">
+                            <input type="text" id="traineeName" class="custom-input w-full p-4 rounded-xl text-base md:text-lg placeholder-white/20" placeholder="e.g. Ahmad Ali">
                         </div>
 
                         <div>
                             <label class="block text-xs font-bold text-[#099999] uppercase tracking-wider mb-2">Company Logo</label>
                             <label class="flex items-center gap-4 p-4 rounded-xl custom-input cursor-pointer hover:bg-white/5 transition group border-dashed">
-                                <div class="w-12 h-12 rounded-lg bg-[#099999]/20 flex items-center justify-center text-[#099999] group-hover:scale-110 transition">
+                                <div class="w-12 h-12 rounded-lg bg-[#099999]/20 flex items-center justify-center text-[#099999] group-hover:scale-110 transition shrink-0">
                                     <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
                                 </div>
-                                <div class="flex-1">
-                                    <span class="block font-medium text-sm">Upload Logo</span>
+                                <div class="flex-1 min-w-0">
+                                    <span class="block font-medium text-sm truncate">Upload Logo</span>
                                     <span class="text-xs text-white/40">Supported: PNG, JPG</span>
                                 </div>
                                 <input type="file" id="logoUpload" accept="image/*" class="hidden">
-                                <img id="logoPreview" src="https://raw.githubusercontent.com/BaselGhanem/Schedule/refs/heads/main/X%20Academy%20Log%20(1).png" class="w-10 h-10 object-contain rounded" alt="Preview" crossorigin="anonymous">
+                                <img id="logoPreview" src="https://raw.githubusercontent.com/BaselGhanem/Schedule/refs/heads/main/X%20Academy%20Log%20(1).png" class="w-10 h-10 object-contain rounded bg-white/5" alt="Preview" crossorigin="anonymous">
                             </label>
                         </div>
                     </div>
@@ -252,22 +266,22 @@
                 </div>
 
                 <div id="step-3" class="step-content max-w-2xl mx-auto">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                         <div class="space-y-1">
                             <label class="text-xs font-bold text-[#099999] uppercase">Start Date</label>
-                            <input type="date" id="startDate" class="custom-input w-full p-3 rounded-xl">
+                            <input type="date" id="startDate" class="custom-input w-full p-3 rounded-xl appearance-none">
                         </div>
                         <div class="space-y-1">
                             <label class="text-xs font-bold text-[#099999] uppercase">Start Time</label>
-                            <input type="time" id="startTime" value="18:00" class="custom-input w-full p-3 rounded-xl">
+                            <input type="time" id="startTime" value="18:00" class="custom-input w-full p-3 rounded-xl appearance-none">
                         </div>
                         
                         <div class="bg-white/5 p-4 rounded-xl">
                             <label class="text-xs text-white/50 block mb-2 text-center">Hours / Session</label>
                             <div class="flex items-center justify-center gap-4">
-                                <button onclick="adjustVal('dailyHours', -0.5)" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20">-</button>
+                                <button onclick="adjustVal('dailyHours', -0.5)" class="w-10 h-10 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 transition text-lg">-</button>
                                 <span class="text-xl font-bold w-12 text-center" id="dispDaily">2</span>
-                                <button onclick="adjustVal('dailyHours', 0.5)" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20">+</button>
+                                <button onclick="adjustVal('dailyHours', 0.5)" class="w-10 h-10 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 transition text-lg">+</button>
                             </div>
                             <input type="hidden" id="dailyHours" value="2">
                         </div>
@@ -275,9 +289,9 @@
                         <div class="bg-white/5 p-4 rounded-xl">
                             <label class="text-xs text-white/50 block mb-2 text-center">Total Course Hours</label>
                             <div class="flex items-center justify-center gap-4">
-                                <button onclick="adjustVal('totalHours', -1)" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20">-</button>
+                                <button onclick="adjustVal('totalHours', -1)" class="w-10 h-10 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 transition text-lg">-</button>
                                 <span class="text-xl font-bold w-12 text-center" id="dispTotal">15</span>
-                                <button onclick="adjustVal('totalHours', 1)" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20">+</button>
+                                <button onclick="adjustVal('totalHours', 1)" class="w-10 h-10 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 transition text-lg">+</button>
                             </div>
                             <input type="hidden" id="totalHours" value="15">
                         </div>
@@ -287,17 +301,17 @@
                         <div class="flex justify-between items-end mb-3">
                             <label class="text-xs font-bold text-[#099999] uppercase">Training Days</label>
                             <div class="flex gap-2">
-                                <button onclick="setPreset('weekdays')" class="text-[10px] bg-white/10 px-2 py-1 rounded hover:bg-white/20 transition">Mon-Fri</button>
-                                <button onclick="setPreset('sundayStart')" class="text-[10px] bg-white/10 px-2 py-1 rounded hover:bg-white/20 transition">Sun-Thu</button>
+                                <button onclick="setPreset('weekdays')" class="text-[10px] bg-white/10 px-3 py-1.5 rounded-lg hover:bg-white/20 transition">Mon-Fri</button>
+                                <button onclick="setPreset('sundayStart')" class="text-[10px] bg-white/10 px-3 py-1.5 rounded-lg hover:bg-white/20 transition">Sun-Thu</button>
                             </div>
                         </div>
                         <div class="flex flex-wrap gap-2 justify-center bg-white/5 p-4 rounded-2xl">
                             <script>
                                 const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
                                 days.forEach((d, i) => document.write(`
-                                    <label class="cursor-pointer">
+                                    <label class="cursor-pointer select-none">
                                         <input type="checkbox" class="hidden day-select day-checkbox" value="${i}">
-                                        <div class="w-11 h-11 rounded-xl border border-white/10 flex items-center justify-center transition hover:bg-white/5 text-xs font-semibold">${d}</div>
+                                        <div class="w-10 h-10 md:w-11 md:h-11 rounded-xl border border-white/10 flex items-center justify-center transition hover:bg-white/5 text-xs font-semibold">${d}</div>
                                     </label>
                                 `));
                             </script>
@@ -315,7 +329,7 @@
                     </div>
 
                     <div class="custom-input p-2 rounded-xl flex gap-2 mb-4">
-                        <input type="date" id="newExcludedDate" class="bg-transparent w-full p-2 outline-none text-white text-sm">
+                        <input type="date" id="newExcludedDate" class="bg-transparent w-full p-2 outline-none text-white text-base">
                         <button onclick="addExcludedDate()" class="bg-red-500/80 hover:bg-red-500 text-white px-4 rounded-lg text-sm font-bold transition">
                             Skip
                         </button>
@@ -327,56 +341,56 @@
                 </div>
 
                 <div id="step-5" class="step-content">
-                    <div class="flex flex-col md:flex-row gap-6 mb-6">
-                        <div class="flex-1 grid grid-cols-2 gap-4">
+                    <div class="flex flex-col md:flex-row gap-4 md:gap-6 mb-6">
+                        <div class="flex-1 grid grid-cols-2 gap-3 md:gap-4">
                             <div class="bg-[#099999]/10 border border-[#099999]/30 p-4 rounded-2xl text-center">
-                                <div class="text-xs text-[#099999] uppercase font-bold mb-1">Total Hours</div>
-                                <div class="text-3xl font-bold text-white" id="resTotalHours">0</div>
+                                <div class="text-[10px] md:text-xs text-[#099999] uppercase font-bold mb-1">Total Hours</div>
+                                <div class="text-2xl md:text-3xl font-bold text-white" id="resTotalHours">0</div>
                             </div>
                             <div class="bg-blue-500/10 border border-blue-500/30 p-4 rounded-2xl text-center">
-                                <div class="text-xs text-blue-400 uppercase font-bold mb-1">Sessions</div>
-                                <div class="text-3xl font-bold text-white" id="resTotalSessions">0</div>
+                                <div class="text-[10px] md:text-xs text-blue-400 uppercase font-bold mb-1">Sessions</div>
+                                <div class="text-2xl md:text-3xl font-bold text-white" id="resTotalSessions">0</div>
                             </div>
                         </div>
                         <div class="flex-1 flex gap-3">
-                            <button onclick="exportExcel()" class="flex-1 bg-green-600 hover:bg-green-500 text-white rounded-2xl flex flex-col items-center justify-center gap-1 transition shadow-lg shadow-green-900/20 group">
-                                <i class="fa-solid fa-file-excel text-2xl group-hover:scale-110 transition"></i>
-                                <span class="text-xs font-bold">Download Excel</span>
+                            <button onclick="exportExcel()" class="flex-1 bg-green-600 hover:bg-green-500 text-white py-3 rounded-2xl flex flex-col items-center justify-center gap-1 transition shadow-lg shadow-green-900/20 group">
+                                <i class="fa-solid fa-file-excel text-xl md:text-2xl group-hover:scale-110 transition"></i>
+                                <span class="text-[10px] md:text-xs font-bold">Excel</span>
                             </button>
-                            <button onclick="exportPDF()" class="flex-1 bg-red-600 hover:bg-red-500 text-white rounded-2xl flex flex-col items-center justify-center gap-1 transition shadow-lg shadow-red-900/20 group">
-                                <i class="fa-solid fa-file-pdf text-2xl group-hover:scale-110 transition"></i>
-                                <span class="text-xs font-bold">Download PDF</span>
+                            <button onclick="exportPDF()" class="flex-1 bg-red-600 hover:bg-red-500 text-white py-3 rounded-2xl flex flex-col items-center justify-center gap-1 transition shadow-lg shadow-red-900/20 group">
+                                <i class="fa-solid fa-file-pdf text-xl md:text-2xl group-hover:scale-110 transition"></i>
+                                <span class="text-[10px] md:text-xs font-bold">PDF</span>
                             </button>
                         </div>
                     </div>
 
-                    <div class="overflow-hidden rounded-2xl border border-white/10 bg-black/20">
-                        <table class="w-full text-sm text-left">
+                    <div class="overflow-x-auto rounded-2xl border border-white/10 bg-black/20 custom-scrollbar">
+                        <table class="w-full text-sm text-left min-w-[500px]">
                             <thead class="bg-white/5 text-white/60 uppercase text-[10px] tracking-wider">
                                 <tr>
-                                    <th class="px-6 py-4">#</th>
-                                    <th class="px-6 py-4">Date</th>
-                                    <th class="px-6 py-4">Day</th>
-                                    <th class="px-6 py-4">Time</th>
-                                    <th class="px-6 py-4 text-right">Action</th>
+                                    <th class="px-4 md:px-6 py-4">#</th>
+                                    <th class="px-4 md:px-6 py-4">Date</th>
+                                    <th class="px-4 md:px-6 py-4">Day</th>
+                                    <th class="px-4 md:px-6 py-4">Time</th>
+                                    <th class="px-4 md:px-6 py-4 text-right">Action</th>
                                 </tr>
                             </thead>
                             <tbody id="resultBody" class="divide-y divide-white/5">
-                                </tbody>
+                            </tbody>
                         </table>
                     </div>
                 </div>
 
             </div>
 
-            <div class="p-6 border-t border-white/5 flex justify-between items-center bg-black/10 backdrop-blur-sm absolute bottom-0 w-full md:relative">
+            <div class="p-4 md:p-6 border-t border-white/5 flex justify-between items-center bg-black/10 backdrop-blur-sm relative z-20">
                 <button id="prevBtn" onclick="changeStep(-1)" class="text-white/50 hover:text-white transition px-4 py-2 text-sm font-medium hidden">
                     <i class="fa-solid fa-arrow-left mr-2"></i> Back
                 </button>
                 
                 <div class="flex-1"></div>
 
-                <button id="nextBtn" onclick="changeStep(1)" class="btn-primary py-3 px-8 rounded-full shadow-lg flex items-center gap-2 font-bold text-sm">
+                <button id="nextBtn" onclick="changeStep(1)" class="btn-primary py-3 px-6 md:px-8 rounded-full shadow-lg flex items-center gap-2 font-bold text-sm w-full md:w-auto justify-center">
                     <span>Next Step</span> <i class="fa-solid fa-arrow-right"></i>
                 </button>
             </div>
@@ -443,9 +457,13 @@
                 }
             });
 
-            // Sidebar indicators
+            // Update Mobile Step Counter
+            document.getElementById('mobileStepCount').innerText = Math.min(currentStep, 5);
+
+            // Sidebar indicators (Desktop)
             for (let i = 1; i <= 4; i++) {
                 const ind = document.getElementById(`ind-${i}`);
+                if (!ind) continue; // Safety check
                 const ball = ind.querySelector('div');
                 
                 if (i === currentStep && currentStep !== 5) {
@@ -625,11 +643,13 @@
         function renderResult() {
             document.getElementById('resultBody').innerHTML = scheduleData.map((r, i) => `
                 <tr class="hover:bg-white/5 transition group">
-                    <td class="px-6 py-4 font-mono text-white/40">${r.id}</td>
-                    <td class="px-6 py-4 font-medium text-white">${r.date}</td>
-                    <td class="px-6 py-4 text-[#099999]">${r.dayName}</td>
-                    <td class="px-6 py-4 text-sm bg-white/5 rounded-lg text-center w-fit">${r.start} - ${r.end}</td>
-                    <td class="px-6 py-4 text-right">
+                    <td class="px-4 md:px-6 py-4 font-mono text-white/40">${r.id}</td>
+                    <td class="px-4 md:px-6 py-4 font-medium text-white whitespace-nowrap">${r.date}</td>
+                    <td class="px-4 md:px-6 py-4 text-[#099999]">${r.dayName}</td>
+                    <td class="px-4 md:px-6 py-4">
+                        <span class="text-xs bg-white/5 rounded-lg px-2 py-1 whitespace-nowrap">${r.start} - ${r.end}</span>
+                    </td>
+                    <td class="px-4 md:px-6 py-4 text-right">
                         <button onclick="removeSession(${i})" class="text-red-400 hover:bg-red-500/20 p-2 rounded-lg transition"><i class="fa-solid fa-trash"></i></button>
                     </td>
                 </tr>
