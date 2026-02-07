@@ -24,7 +24,6 @@
             --bg-main: #020617;
         }
 
-        /* High Contrast Mode Overrides */
         body.high-contrast {
             --primary: #00ffff;
             --primary-dark: #00cccc;
@@ -36,8 +35,6 @@
         body.high-contrast .ambient-bg, 
         body.high-contrast .orb { display: none; }
         body.high-contrast .glass-panel { background: black; border: 2px solid white; box-shadow: none; }
-        body.high-contrast .custom-input { background: #111; border: 1px solid white; color: white; }
-        body.high-contrast input::placeholder { color: #fff; opacity: 1; }
 
         body { 
             font-family: 'Outfit', sans-serif; 
@@ -122,7 +119,7 @@
             40%, 60% { transform: translate3d(4px, 0, 0); }
         }
 
-        /* Micro-Animations for Cards */
+        /* Micro-Animations */
         .card-select:checked + div {
             border-color: var(--primary);
             background: rgba(9, 153, 153, 0.1);
@@ -133,9 +130,11 @@
             opacity: 1; transform: scale(1);
         }
         
-        /* Sticky Summary HUD */
+        /* Sticky Summary HUD - FIXED POSITIONING */
         .hud-summary {
-            position: absolute; bottom: 20px; right: 20px;
+            position: absolute; 
+            bottom: 100px; /* Lifted up to clear footer buttons */
+            right: 20px;
             width: 280px;
             background: rgba(0,0,0,0.6);
             backdrop-filter: blur(10px);
@@ -145,8 +144,23 @@
             z-index: 50;
             transform: translateY(150%);
             transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none; /* Let clicks pass through if needed, but inner content has events */
         }
+        .hud-summary > * { pointer-events: auto; }
         .hud-summary.visible { transform: translateY(0); }
+
+        /* Mobile specific HUD tweaks */
+        @media (max-width: 768px) {
+            .hud-summary {
+                bottom: 90px; /* Just above footer on mobile */
+                right: 15px;
+                left: 15px; /* Full width minus margins */
+                width: auto;
+                max-width: none;
+                padding: 10px 15px;
+                font-size: 0.9em;
+            }
+        }
 
         /* Skeleton Loader */
         .skeleton-box {
@@ -156,16 +170,6 @@
             border-radius: 8px;
         }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-
-        /* Tooltip */
-        .tooltip-wrap { position: relative; display: inline-flex; align-items: center; cursor: help; }
-        .tooltip-content {
-            visibility: hidden; position: absolute; bottom: 120%; left: 50%; transform: translateX(-50%);
-            background: #333; color: #fff; padding: 6px 10px; border-radius: 6px; font-size: 0.75rem;
-            white-space: nowrap; opacity: 0; transition: 0.2s; pointer-events: none; border: 1px solid rgba(255,255,255,0.1);
-            z-index: 100;
-        }
-        .tooltip-wrap:hover .tooltip-content { visibility: visible; opacity: 1; bottom: 130%; }
 
         /* Steps Transition */
         .step-content { display: none; opacity: 0; transform: translateY(10px); transition: all 0.4s ease-out; }
@@ -184,17 +188,15 @@
             background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 0 10px rgba(9, 153, 153, 0.3);
         }
 
-        /* Editable Table Cells */
-        [contenteditable]:focus {
-            outline: 2px solid var(--primary);
-            background: rgba(0,0,0,0.2);
-            border-radius: 4px;
-            padding: 2px 5px;
-        }
-
-        ::-webkit-scrollbar { width: 6px; }
+        /* Mobile Scrollbar fix */
+        ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+
+        /* Prevent Zoom on inputs for Mobile */
+        @media (max-width: 768px) {
+            input, select, textarea { font-size: 16px !important; }
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-0 md:p-4">
@@ -278,7 +280,7 @@
                 </div>
             </div>
 
-            <div class="flex-1 p-5 md:p-10 overflow-y-auto custom-scrollbar relative">
+            <div class="flex-1 p-5 md:p-10 pb-32 overflow-y-auto custom-scrollbar relative">
                 
                 <div id="step-1" class="step-content active max-w-lg mx-auto">
                     <div class="space-y-6">
@@ -514,7 +516,7 @@
 
             </div>
 
-            <div class="p-4 md:p-6 border-t border-white/5 flex justify-between items-center bg-black/10 backdrop-blur-sm relative z-20">
+            <div class="p-4 md:p-6 border-t border-white/5 flex justify-between items-center bg-[#0e1624] md:bg-black/10 backdrop-blur-sm relative z-40">
                 <button id="prevBtn" onclick="changeStep(-1)" class="text-white/50 hover:text-white transition px-4 py-2 text-sm font-medium hidden">
                     <i class="fa-solid fa-arrow-left mr-2"></i> Back
                 </button>
@@ -902,9 +904,8 @@
             `).join('');
         }
 
-        // Just for visual edit capability - logic to parse back could be added if needed
         function updateRowData(idx, el) {
-            // Optional: Add logic here to save the manual time edit back to scheduleData array
+            // Placeholder for manual edits logic
         }
 
         function removeSession(idx) {
@@ -923,7 +924,6 @@
             const trainee = document.getElementById('traineeName').value;
             const course = document.getElementById('courseName').value;
 
-            // Teal Header
             doc.setFillColor(9, 153, 153);
             doc.rect(0, 0, 210, 45, 'F');
             
