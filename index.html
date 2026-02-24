@@ -18,31 +18,19 @@
         :root {
             --primary: #099999;
             --primary-dark: #077a7a;
-            --glass-bg: rgba(16, 24, 39, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-bg: rgba(16, 24, 39, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.1);
             --text-main: #e2e8f0;
             --bg-main: #020617;
         }
-
-        body.high-contrast {
-            --primary: #00ffff;
-            --primary-dark: #00cccc;
-            --glass-bg: #000000;
-            --glass-border: #ffffff;
-            --text-main: #ffffff;
-            --bg-main: #000000;
-        }
-        body.high-contrast .ambient-bg, 
-        body.high-contrast .orb { display: none; }
-        body.high-contrast .glass-panel { background: black; border: 2px solid white; box-shadow: none; }
 
         body { 
             font-family: 'Outfit', sans-serif; 
             background: var(--bg-main);
             color: var(--text-main);
-            overflow-x: hidden;
-            overscroll-behavior-y: none;
-            transition: background 0.3s;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
         }
 
         /* Ambient Background */
@@ -53,534 +41,318 @@
         }
 
         .orb {
-            position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.4;
+            position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.3;
             animation: floatOrb 20s infinite alternate;
         }
         .orb-1 { width: 400px; height: 400px; background: var(--primary); top: -100px; left: -100px; }
-        .orb-2 { width: 300px; height: 300px; background: #3b82f6; bottom: -50px; right: -50px; animation-delay: -5s; }
+        .orb-2 { width: 300px; height: 300px; background: #3b82f6; bottom: -50px; right: -50px; }
         
         @keyframes floatOrb {
             0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(50px, 50px) scale(1.1); }
+            100% { transform: translate(30px, 30px) scale(1.1); }
         }
 
-        /* Glass Panel */
         .glass-panel {
             background: var(--glass-bg);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            transition: all 0.3s ease;
         }
 
-        /* Top Progress Bar */
-        .progress-track {
+        /* Responsive Container */
+        .app-container {
+            height: 100vh;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @media (min-width: 768px) {
+            .app-container {
+                height: 85vh;
+                max-width: 1000px;
+                border-radius: 24px;
+                overflow: hidden;
+            }
+        }
+
+        /* Navigation Fixes */
+        .footer-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding: 1rem;
+            z-index: 100;
+        }
+
+        /* Live Preview HUD Reframed */
+        .hud-summary {
+            position: absolute;
+            bottom: 85px; 
+            left: 1rem;
+            right: 1rem;
+            background: rgba(9, 153, 153, 0.15);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(9, 153, 153, 0.3);
+            border-radius: 16px;
+            padding: 12px 16px;
+            z-index: 90;
+            transform: translateY(200%);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @media (min-width: 768px) {
+            .hud-summary {
+                width: 300px;
+                left: auto;
+                right: 24px;
+                bottom: 100px;
+            }
+        }
+
+        .hud-summary.visible { transform: translateY(0); }
+
+        .step-content { display: none; height: 100%; overflow-y: auto; padding-bottom: 180px; }
+        .step-content.active { display: block; animation: fadeIn 0.4s ease; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .custom-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 12px;
+            width: 100%;
+            transition: all 0.3s;
+        }
+        .custom-input:focus { border-color: var(--primary); outline: none; background: rgba(255, 255, 255, 0.08); }
+
+        /* Card Selection */
+        .card-radio:checked + .card-design {
+            border-color: var(--primary);
+            background: rgba(9, 153, 153, 0.1);
+            box-shadow: 0 0 15px rgba(9, 153, 153, 0.2);
+        }
+        
+        .progress-bar {
             height: 4px;
             background: rgba(255,255,255,0.1);
             width: 100%;
-            position: relative;
+            position: absolute;
+            top: 0;
+            left: 0;
         }
         .progress-fill {
             height: 100%;
             background: var(--primary);
-            width: 20%;
-            transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+            width: 0%;
+            transition: width 0.5s ease;
             box-shadow: 0 0 10px var(--primary);
         }
 
-        /* Inputs & Validation */
-        .custom-input {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: var(--text-main);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .custom-input:focus {
-            background: rgba(255, 255, 255, 0.05);
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(9, 153, 153, 0.15);
-            outline: none;
-        }
-        .input-error {
-            border-color: #ef4444 !important;
-            background: rgba(239, 68, 68, 0.05) !important;
-            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-        }
-        .error-msg {
-            color: #ef4444; font-size: 0.75rem; margin-top: 0.25rem; display: none; font-weight: 600;
-        }
-        .input-error + .error-msg { display: block; }
-
-        @keyframes shake {
-            10%, 90% { transform: translate3d(-1px, 0, 0); }
-            20%, 80% { transform: translate3d(2px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-            40%, 60% { transform: translate3d(4px, 0, 0); }
-        }
-
-        /* Micro-Animations */
-        .card-select:checked + div {
-            border-color: var(--primary);
-            background: rgba(9, 153, 153, 0.1);
-            box-shadow: 0 0 20px rgba(9, 153, 153, 0.2);
-            transform: translateY(-2px);
-        }
-        .card-select:checked + div .check-icon {
-            opacity: 1; transform: scale(1);
-        }
-        
-        /* Sticky Summary HUD - FIXED POSITIONING */
-        .hud-summary {
-            position: absolute; 
-            bottom: 100px; /* Lifted up to clear footer buttons */
-            right: 20px;
-            width: 280px;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 16px;
-            padding: 15px;
-            z-index: 50;
-            transform: translateY(150%);
-            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-            pointer-events: none; /* Let clicks pass through if needed, but inner content has events */
-        }
-        .hud-summary > * { pointer-events: auto; }
-        .hud-summary.visible { transform: translateY(0); }
-
-        /* Mobile specific HUD tweaks */
-        @media (max-width: 768px) {
-            .hud-summary {
-                bottom: 90px; /* Just above footer on mobile */
-                right: 15px;
-                left: 15px; /* Full width minus margins */
-                width: auto;
-                max-width: none;
-                padding: 10px 15px;
-                font-size: 0.9em;
-            }
-        }
-
-        /* Skeleton Loader */
-        .skeleton-box {
-            background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-            border-radius: 8px;
-        }
-        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-
-        /* Steps Transition */
-        .step-content { display: none; opacity: 0; transform: translateY(10px); transition: all 0.4s ease-out; }
-        .step-content.active { display: block; opacity: 1; transform: translateY(0); }
-        
-        /* Buttons */
-        .btn-primary {
-            background: var(--primary); color: white; transition: all 0.3s ease;
-        }
-        .btn-primary:hover {
-            background: var(--primary-dark); box-shadow: 0 0 20px rgba(9, 153, 153, 0.4); transform: translateY(-1px);
-        }
-
-        /* Checkbox Customization */
-        .day-checkbox:checked + div {
-            background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 0 10px rgba(9, 153, 153, 0.3);
-        }
-
-        /* Mobile Scrollbar fix */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-
-        /* Prevent Zoom on inputs for Mobile */
-        @media (max-width: 768px) {
-            input, select, textarea { font-size: 16px !important; }
-        }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-0 md:p-4">
+<body class="flex items-center justify-center">
 
     <div class="ambient-bg"></div>
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
 
-    <div class="glass-panel w-full max-w-5xl md:rounded-3xl rounded-none overflow-hidden flex flex-col md:flex-row h-[100dvh] md:h-[850px] relative">
-        
-        <div class="w-full md:w-72 bg-black/20 p-5 md:p-8 flex flex-row md:flex-col justify-between items-center md:items-start border-b md:border-b-0 md:border-r border-white/5 relative shrink-0 z-20">
-            <div class="flex items-center gap-3 md:mb-10 z-10">
-                <div class="w-10 h-10 rounded-xl bg-[#099999] flex items-center justify-center text-white font-bold text-xl shadow-[0_0_15px_#099999aa]">
-                    X
-                </div>
-                <div>
-                    <h1 class="font-bold text-lg leading-tight">Schedule<br><span class="text-[#099999]">Wizard</span></h1>
-                </div>
+    <main class="app-container glass-panel relative">
+        <div class="progress-bar"><div id="progressBar" class="progress-fill"></div></div>
+
+        <header class="p-4 md:p-6 border-b border-white/5 flex justify-between items-center shrink-0 bg-black/20">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-[#099999] flex items-center justify-center text-white font-bold">X</div>
+                <h1 class="font-bold text-sm md:text-base">Wizard <span class="text-[#099999]" id="mobileStepLabel">1/5</span></h1>
             </div>
-
-            <div class="space-y-1 relative z-10 flex-1 hidden md:block w-full">
-                <div class="step-item flex items-center gap-4 p-3 rounded-xl transition-all duration-300" id="ind-1">
-                    <div class="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center text-xs font-bold transition-all">1</div>
-                    <span class="text-sm font-medium">Basics</span>
-                </div>
-                <div class="h-6 border-l border-dashed border-white/10 ml-7 my-1"></div>
-                
-                <div class="step-item flex items-center gap-4 p-3 rounded-xl transition-all duration-300 opacity-50" id="ind-2">
-                    <div class="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center text-xs font-bold transition-all">2</div>
-                    <span class="text-sm font-medium">Path</span>
-                </div>
-                <div class="h-6 border-l border-dashed border-white/10 ml-7 my-1"></div>
-
-                <div class="step-item flex items-center gap-4 p-3 rounded-xl transition-all duration-300 opacity-50" id="ind-3">
-                    <div class="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center text-xs font-bold transition-all">3</div>
-                    <span class="text-sm font-medium">Timing</span>
-                </div>
-                <div class="h-6 border-l border-dashed border-white/10 ml-7 my-1"></div>
-
-                <div class="step-item flex items-center gap-4 p-3 rounded-xl transition-all duration-300 opacity-50" id="ind-4">
-                    <div class="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center text-xs font-bold transition-all">4</div>
-                    <span class="text-sm font-medium">Review</span>
-                </div>
+            <div class="flex gap-2">
+                <button onclick="resetApp()" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-xs"><i class="fa-solid fa-rotate-right"></i></button>
             </div>
+        </header>
 
-            <div class="md:hidden flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">
-                <span class="text-[10px] text-white/50 uppercase tracking-wider font-bold">Step</span>
-                <span class="text-base font-bold text-[#099999]" id="mobileStepCount">1</span>
-                <span class="text-white/20 text-xs">/</span>
-                <span class="text-xs text-white/50">5</span>
-            </div>
-
-            <div class="mt-auto pt-6 border-t border-white/10 z-10 hidden md:block w-full">
-                <div class="flex items-center gap-3 opacity-60">
-                    <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-gray-700 to-gray-600"></div>
-                    <div class="text-xs">
-                        <div class="font-bold">Basel Ghanem</div>
-                        <div>Trainer</div>
-                    </div>
-                </div>
-            </div>
+        <div class="flex-1 overflow-hidden relative p-4 md:p-8">
             
-            <div class="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-[#099999]/10 to-transparent pointer-events-none hidden md:block"></div>
-        </div>
-
-        <div class="flex-1 flex flex-col relative overflow-hidden bg-black/20">
-            
-            <div class="progress-track">
-                <div class="progress-fill" id="progressBar"></div>
+            <div id="step-1" class="step-content active">
+                <div class="max-w-md mx-auto space-y-6">
+                    <div class="text-center md:text-left">
+                        <h2 class="text-2xl font-bold">Trainee Info</h2>
+                        <p class="text-white/50 text-sm">Let's start with the basics.</p>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-[#099999] uppercase block mb-2">Full Name</label>
+                        <input type="text" id="traineeName" class="custom-input text-lg" placeholder="Ahmad Ali..." oninput="updateSummary()">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-[#099999] uppercase block mb-2">Branding (Optional)</label>
+                        <div class="flex items-center gap-4 p-4 border-2 border-dashed border-white/10 rounded-xl">
+                            <input type="file" id="logoUpload" class="hidden" accept="image/*">
+                            <label for="logoUpload" class="cursor-pointer bg-white/10 px-4 py-2 rounded-lg text-xs font-bold hover:bg-white/20 transition">Upload Logo</label>
+                            <img id="logoPreview" src="https://raw.githubusercontent.com/BaselGhanem/Schedule/refs/heads/main/X%20Academy%20Log%20(1).png" class="w-10 h-10 object-contain" crossorigin="anonymous">
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="p-5 md:p-6 border-b border-white/5 flex justify-between items-center bg-black/10 backdrop-blur-sm z-10">
-                <h2 class="text-lg md:text-xl font-bold truncate pr-4 text-white" id="stepTitle">Trainee Details</h2>
-                <div class="flex items-center gap-2">
-                    <button onclick="toggleContrast()" class="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center transition text-white/50 hover:text-white" title="High Contrast Mode">
-                        <i class="fa-solid fa-circle-half-stroke"></i>
-                    </button>
-                    <button onclick="resetApp()" class="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center transition text-white/50 hover:text-white" title="Reset">
-                        <i class="fa-solid fa-rotate-right"></i>
-                    </button>
+            <div id="step-2" class="step-content">
+                <div class="max-w-2xl mx-auto">
+                    <h2 class="text-xl font-bold mb-6 text-center">Choose Learning Path</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="courseType" value="excel" class="hidden card-radio" onchange="handleCourseSelect('excel')">
+                            <div class="card-design p-5 border border-white/10 rounded-2xl h-full transition flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center text-green-500 text-xl"><i class="fa-solid fa-file-excel"></i></div>
+                                <div><h3 class="font-bold">Excel Mastery</h3><p class="text-xs text-white/40">Zero to Hero</p></div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="courseType" value="powerbi" class="hidden card-radio" onchange="handleCourseSelect('powerbi')">
+                            <div class="card-design p-5 border border-white/10 rounded-2xl h-full transition flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center text-yellow-500 text-xl"><i class="fa-solid fa-chart-pie"></i></div>
+                                <div><h3 class="font-bold">Power BI</h3><p class="text-xs text-white/40">BI Specialist</p></div>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="mt-4">
+                        <input type="text" id="courseName" class="custom-input" placeholder="Custom Course Title" oninput="updateSummary()">
+                    </div>
                 </div>
             </div>
 
-            <div class="flex-1 p-5 md:p-10 pb-32 overflow-y-auto custom-scrollbar relative">
-                
-                <div id="step-1" class="step-content active max-w-lg mx-auto">
-                    <div class="space-y-6">
+            <div id="step-3" class="step-content">
+                <div class="max-w-md mx-auto space-y-6">
+                    <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-bold text-[#099999] uppercase tracking-wider mb-2">Trainee Name</label>
-                            <input type="text" id="traineeName" class="custom-input w-full p-4 rounded-xl text-base md:text-lg placeholder-white/20" placeholder="e.g. Ahmad Ali" oninput="updateSummary()">
-                            <span class="error-msg">Please enter the trainee's name.</span>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-bold text-[#099999] uppercase tracking-wider mb-2">Company Logo</label>
-                            <label class="flex items-center gap-4 p-4 rounded-xl custom-input cursor-pointer hover:bg-white/5 transition group border-dashed">
-                                <div class="w-12 h-12 rounded-lg bg-[#099999]/20 flex items-center justify-center text-[#099999] group-hover:scale-110 transition shrink-0">
-                                    <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <span class="block font-medium text-sm truncate">Upload Logo</span>
-                                    <span class="text-xs text-white/40">Supported: PNG, JPG</span>
-                                </div>
-                                <input type="file" id="logoUpload" accept="image/*" class="hidden">
-                                <img id="logoPreview" src="https://raw.githubusercontent.com/BaselGhanem/Schedule/refs/heads/main/X%20Academy%20Log%20(1).png" class="w-10 h-10 object-contain rounded bg-white/5" alt="Preview" crossorigin="anonymous">
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="step-2" class="step-content max-w-2xl mx-auto">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                        <label class="cursor-pointer group relative">
-                            <input type="radio" name="courseType" value="excel" class="peer hidden card-select" onchange="handleCourseSelect('excel')">
-                            <div class="custom-input p-6 rounded-2xl border-2 border-transparent transition h-full flex flex-col items-center text-center group-hover:bg-white/5">
-                                <div class="absolute top-4 right-4 opacity-0 transition transform scale-50 check-icon text-[#099999]"><i class="fa-solid fa-circle-check text-xl"></i></div>
-                                <div class="w-14 h-14 rounded-full bg-[#1D6F42]/20 flex items-center justify-center mb-4 text-[#1D6F42] text-2xl">
-                                    <i class="fa-solid fa-file-excel"></i>
-                                </div>
-                                <h3 class="font-bold text-lg">Excel Mastery</h3>
-                                <p class="text-xs text-white/50 mt-1">Zero to Hero</p>
-                            </div>
-                        </label>
-
-                        <label class="cursor-pointer group relative">
-                            <input type="radio" name="courseType" value="powerbi" class="peer hidden card-select" onchange="handleCourseSelect('powerbi')">
-                            <div class="custom-input p-6 rounded-2xl border-2 border-transparent transition h-full flex flex-col items-center text-center group-hover:bg-white/5">
-                                <div class="absolute top-4 right-4 opacity-0 transition transform scale-50 check-icon text-[#099999]"><i class="fa-solid fa-circle-check text-xl"></i></div>
-                                <div class="w-14 h-14 rounded-full bg-[#F2C811]/20 flex items-center justify-center mb-4 text-[#F2C811] text-2xl">
-                                    <i class="fa-solid fa-chart-simple"></i>
-                                </div>
-                                <h3 class="font-bold text-lg">Power BI</h3>
-                                <p class="text-xs text-white/50 mt-1">Business Intelligence</p>
-                            </div>
-                        </label>
-
-                        <label class="cursor-pointer group relative">
-                            <input type="radio" name="courseType" value="dataanalysis" class="peer hidden card-select" onchange="handleCourseSelect('dataanalysis')">
-                            <div class="custom-input p-6 rounded-2xl border-2 border-transparent transition h-full flex flex-col items-center text-center group-hover:bg-white/5">
-                                <div class="absolute top-4 right-4 opacity-0 transition transform scale-50 check-icon text-[#099999]"><i class="fa-solid fa-circle-check text-xl"></i></div>
-                                <div class="w-14 h-14 rounded-full bg-[#3b82f6]/20 flex items-center justify-center mb-4 text-[#3b82f6] text-2xl">
-                                    <i class="fa-solid fa-magnifying-glass-chart"></i>
-                                </div>
-                                <h3 class="font-bold text-lg">Data Analysis</h3>
-                                <p class="text-xs text-white/50 mt-1">Insight & Strategy</p>
-                            </div>
-                        </label>
-                        
-                         <label class="cursor-pointer md:col-span-2 relative">
-                            <input type="radio" name="courseType" value="other" class="peer hidden card-select" onchange="handleCourseSelect('other')">
-                            <div class="custom-input p-4 rounded-xl border-2 border-transparent transition flex items-center gap-4 group-hover:bg-white/5">
-                                <div class="absolute top-4 right-4 opacity-0 transition transform scale-50 check-icon text-[#099999]"><i class="fa-solid fa-circle-check text-xl"></i></div>
-                                <div class="w-10 h-10 rounded-full bg-[#099999]/20 flex items-center justify-center text-[#099999]">
-                                    <i class="fa-solid fa-pen-nib"></i>
-                                </div>
-                                <span class="font-bold">Custom Course</span>
-                            </div>
-                        </label>
-                    </div>
-
-                    <div id="customCourseFields" class="space-y-4 opacity-50 pointer-events-none transition-all duration-300">
-                        <div>
-                            <input type="text" id="courseName" class="custom-input w-full p-3 rounded-xl text-sm" placeholder="Course Title" readonly oninput="updateSummary()">
-                            <span class="error-msg">Please enter a course name.</span>
+                            <label class="text-[10px] font-bold text-[#099999] uppercase mb-1 block">Start Date</label>
+                            <input type="date" id="startDate" class="custom-input">
                         </div>
                         <div>
-                            <textarea id="courseTopics" rows="3" class="custom-input w-full p-3 rounded-xl text-sm" placeholder="Topics list..." readonly></textarea>
+                            <label class="text-[10px] font-bold text-[#099999] uppercase mb-1 block">Start Time</label>
+                            <input type="time" id="startTime" value="18:00" class="custom-input">
                         </div>
                     </div>
-                </div>
-
-                <div id="step-3" class="step-content max-w-2xl mx-auto">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                        <div class="space-y-1">
-                            <label class="text-xs font-bold text-[#099999] uppercase">Start Date</label>
-                            <input type="date" id="startDate" class="custom-input w-full p-3 rounded-xl appearance-none" onchange="validateField(this)">
-                            <span class="error-msg">Start date is required.</span>
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-xs font-bold text-[#099999] uppercase">Start Time</label>
-                            <input type="time" id="startTime" value="18:00" class="custom-input w-full p-3 rounded-xl appearance-none">
-                        </div>
-                        
-                        <div class="bg-white/5 p-4 rounded-xl">
-                            <div class="flex justify-between items-center mb-2">
-                                <label class="text-xs text-white/50 block text-center flex-1">Hours / Session</label>
-                            </div>
-                            <div class="flex items-center justify-center gap-4">
-                                <button onclick="adjustVal('dailyHours', -0.5)" class="w-10 h-10 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 transition text-lg">-</button>
-                                <span class="text-xl font-bold w-12 text-center" id="dispDaily">2</span>
-                                <button onclick="adjustVal('dailyHours', 0.5)" class="w-10 h-10 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 transition text-lg">+</button>
-                            </div>
-                            <input type="hidden" id="dailyHours" value="2">
-                        </div>
-
-                        <div class="bg-white/5 p-4 rounded-xl relative">
-                            <div class="flex justify-between items-center mb-2">
-                                <label class="text-xs text-white/50 block text-center flex-1">
-                                    Total Course Hours
-                                    <div class="tooltip-wrap ml-1"><i class="fa-solid fa-circle-info text-[#099999]"></i>
-                                        <div class="tooltip-content">Total duration of the course</div>
-                                    </div>
-                                </label>
-                            </div>
-                            <div class="flex items-center justify-center gap-4">
-                                <button onclick="adjustVal('totalHours', -1)" class="w-10 h-10 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 transition text-lg">-</button>
-                                <span class="text-xl font-bold w-12 text-center" id="dispTotal">15</span>
-                                <button onclick="adjustVal('totalHours', 1)" class="w-10 h-10 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 transition text-lg">+</button>
-                            </div>
-                            <input type="hidden" id="totalHours" value="15">
-                        </div>
-                    </div>
-
-                    <div class="mt-8">
-                        <div class="flex justify-between items-end mb-3">
-                            <label class="text-xs font-bold text-[#099999] uppercase flex items-center gap-2">
-                                Training Days
-                                <div class="tooltip-wrap"><i class="fa-solid fa-circle-info"></i>
-                                    <div class="tooltip-content">Select days the course will be held</div>
-                                </div>
-                            </label>
-                            <div class="flex gap-2">
-                                <button onclick="setPreset('weekdays')" class="text-[10px] bg-white/10 px-3 py-1.5 rounded-lg hover:bg-white/20 transition">Mon-Fri</button>
-                                <button onclick="setPreset('sundayStart')" class="text-[10px] bg-white/10 px-3 py-1.5 rounded-lg hover:bg-white/20 transition">Sun-Thu</button>
-                            </div>
-                        </div>
-                        <div class="flex flex-wrap gap-2 justify-center bg-white/5 p-4 rounded-2xl" id="daysContainer">
-                            <script>
-                                const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-                                days.forEach((d, i) => document.write(`
-                                    <label class="cursor-pointer select-none">
-                                        <input type="checkbox" class="hidden day-select day-checkbox" value="${i}" onchange="validateDays()">
-                                        <div class="w-10 h-10 md:w-11 md:h-11 rounded-xl border border-white/10 flex items-center justify-center transition hover:bg-white/5 text-xs font-semibold">${d}</div>
-                                    </label>
-                                `));
-                            </script>
-                        </div>
-                        <span class="error-msg text-center" id="daysError">Please select at least one day.</span>
-                    </div>
-                </div>
-
-                <div id="step-4" class="step-content max-w-lg mx-auto">
-                    <div class="text-center mb-6">
-                        <div class="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center text-red-400 text-2xl mx-auto mb-3">
-                            <i class="fa-regular fa-calendar-xmark"></i>
-                        </div>
-                        <h3 class="text-lg font-bold">Skip specific dates?</h3>
-                        <p class="text-sm text-white/50">Add public holidays or personal days off.</p>
-                    </div>
-
-                    <div class="custom-input p-2 rounded-xl flex gap-2 mb-4">
-                        <input type="date" id="newExcludedDate" class="bg-transparent w-full p-2 outline-none text-white text-base">
-                        <button onclick="addExcludedDate()" class="bg-red-500/80 hover:bg-red-500 text-white px-4 rounded-lg text-sm font-bold transition">
-                            Skip
-                        </button>
-                    </div>
-
-                    <div id="excludedList" class="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
-                        <div class="text-center text-white/20 text-xs py-4">No skipped dates added.</div>
-                    </div>
-                </div>
-
-                <div id="step-5" class="step-content">
                     
-                    <div id="skeletonLoader" class="hidden space-y-4">
-                        <div class="flex gap-4">
-                            <div class="h-24 w-1/2 skeleton-box"></div>
-                            <div class="h-24 w-1/2 skeleton-box"></div>
-                        </div>
-                        <div class="h-10 skeleton-box w-full"></div>
-                        <div class="h-8 skeleton-box w-full"></div>
-                        <div class="h-8 skeleton-box w-full"></div>
-                        <div class="h-8 skeleton-box w-full"></div>
-                    </div>
-
-                    <div id="finalContent" class="hidden opacity-0 transition-opacity duration-500">
-                        <div class="flex flex-col md:flex-row gap-4 md:gap-6 mb-6">
-                            <div class="flex-1 grid grid-cols-2 gap-3 md:gap-4">
-                                <div class="bg-[#099999]/10 border border-[#099999]/30 p-4 rounded-2xl text-center">
-                                    <div class="text-[10px] md:text-xs text-[#099999] uppercase font-bold mb-1">Total Hours</div>
-                                    <div class="text-2xl md:text-3xl font-bold text-white" id="resTotalHours">0</div>
-                                </div>
-                                <div class="bg-blue-500/10 border border-blue-500/30 p-4 rounded-2xl text-center">
-                                    <div class="text-[10px] md:text-xs text-blue-400 uppercase font-bold mb-1">Sessions</div>
-                                    <div class="text-2xl md:text-3xl font-bold text-white" id="resTotalSessions">0</div>
-                                </div>
-                            </div>
-                            <div class="flex-1 flex gap-3">
-                                <button onclick="exportExcel()" class="flex-1 bg-green-600 hover:bg-green-500 text-white py-3 rounded-2xl flex flex-col items-center justify-center gap-1 transition shadow-lg shadow-green-900/20 group">
-                                    <i class="fa-solid fa-file-excel text-xl md:text-2xl group-hover:scale-110 transition"></i>
-                                    <span class="text-[10px] md:text-xs font-bold">Excel</span>
-                                </button>
-                                <button onclick="exportPDF()" class="flex-1 bg-red-600 hover:bg-red-500 text-white py-3 rounded-2xl flex flex-col items-center justify-center gap-1 transition shadow-lg shadow-red-900/20 group">
-                                    <i class="fa-solid fa-file-pdf text-xl md:text-2xl group-hover:scale-110 transition"></i>
-                                    <span class="text-[10px] md:text-xs font-bold">PDF</span>
-                                </button>
+                    <div class="bg-white/5 p-4 rounded-xl space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm">Hours per Session</span>
+                            <div class="flex items-center gap-3">
+                                <button onclick="adjustVal('dailyHours', -0.5)" class="w-8 h-8 rounded bg-white/10">-</button>
+                                <span id="dispDaily" class="font-bold text-[#099999]">2</span>
+                                <button onclick="adjustVal('dailyHours', 0.5)" class="w-8 h-8 rounded bg-white/10">+</button>
                             </div>
                         </div>
-
-                        <div class="overflow-x-auto rounded-2xl border border-white/10 bg-black/20 custom-scrollbar">
-                            <table class="w-full text-sm text-left min-w-[500px]">
-                                <thead class="bg-white/5 text-white/60 uppercase text-[10px] tracking-wider">
-                                    <tr>
-                                        <th class="px-4 md:px-6 py-4">#</th>
-                                        <th class="px-4 md:px-6 py-4">Date</th>
-                                        <th class="px-4 md:px-6 py-4">Day</th>
-                                        <th class="px-4 md:px-6 py-4">Time <span class="text-[9px] lowercase opacity-50 ml-1">(click to edit)</span></th>
-                                        <th class="px-4 md:px-6 py-4 text-right">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="resultBody" class="divide-y divide-white/5">
-                                </tbody>
-                            </table>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm">Total Course Hours</span>
+                            <div class="flex items-center gap-3">
+                                <button onclick="adjustVal('totalHours', -1)" class="w-8 h-8 rounded bg-white/10">-</button>
+                                <span id="dispTotal" class="font-bold text-[#099999]">15</span>
+                                <button onclick="adjustVal('totalHours', 1)" class="w-8 h-8 rounded bg-white/10">+</button>
+                            </div>
                         </div>
                     </div>
-                </div>
 
+                    <div>
+                        <label class="text-[10px] font-bold text-[#099999] uppercase mb-2 block text-center">Training Days</label>
+                        <div class="flex justify-center gap-2" id="daysContainer">
+                            </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="p-4 md:p-6 border-t border-white/5 flex justify-between items-center bg-[#0e1624] md:bg-black/10 backdrop-blur-sm relative z-40">
-                <button id="prevBtn" onclick="changeStep(-1)" class="text-white/50 hover:text-white transition px-4 py-2 text-sm font-medium hidden">
-                    <i class="fa-solid fa-arrow-left mr-2"></i> Back
-                </button>
-                
-                <div class="flex-1"></div>
-
-                <button id="nextBtn" onclick="changeStep(1)" class="btn-primary py-3 px-6 md:px-8 rounded-full shadow-lg flex items-center gap-2 font-bold text-sm w-full md:w-auto justify-center">
-                    <span>Next Step</span> <i class="fa-solid fa-arrow-right"></i>
-                </button>
+            <div id="step-4" class="step-content">
+                <div class="max-w-md mx-auto text-center space-y-6">
+                    <div class="w-16 h-16 bg-red-500/20 text-red-500 rounded-full flex items-center justify-center mx-auto text-2xl">
+                        <i class="fa-solid fa-calendar-circle-exclamation"></i>
+                    </div>
+                    <h2 class="text-xl font-bold">Skip Dates?</h2>
+                    <p class="text-white/40 text-sm">Add any holidays or personal breaks.</p>
+                    <div class="flex gap-2">
+                        <input type="date" id="newExcludedDate" class="custom-input">
+                        <button onclick="addExcludedDate()" class="bg-red-500 px-4 rounded-xl font-bold text-sm">Skip</button>
+                    </div>
+                    <div id="excludedList" class="space-y-2"></div>
+                </div>
             </div>
 
-            <div id="summaryWidget" class="hud-summary">
-                <div class="flex items-center gap-3 border-b border-white/10 pb-2 mb-2">
-                    <div class="w-2 h-2 rounded-full bg-[#099999] animate-pulse"></div>
-                    <span class="text-xs font-bold text-white/50 uppercase">Live Preview</span>
-                </div>
-                <div class="space-y-1">
-                    <div class="flex justify-between text-sm">
-                        <span class="text-white/40">Trainee:</span>
-                        <span class="font-bold truncate max-w-[120px]" id="hudName">-</span>
+            <div id="step-5" class="step-content">
+                <div class="flex flex-col h-full">
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="bg-[#099999]/10 p-4 rounded-2xl text-center">
+                            <div class="text-[10px] text-[#099999] uppercase font-bold">Sessions</div>
+                            <div id="resTotalSessions" class="text-2xl font-bold">0</div>
+                        </div>
+                        <div class="bg-blue-500/10 p-4 rounded-2xl text-center">
+                            <div class="text-[10px] text-blue-400 uppercase font-bold">Total Hrs</div>
+                            <div id="resTotalHours" class="text-2xl font-bold">0</div>
+                        </div>
                     </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-white/40">Course:</span>
-                        <span class="font-bold truncate max-w-[120px]" id="hudCourse">-</span>
+                    <div class="flex-1 overflow-auto rounded-xl border border-white/10">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-white/5 sticky top-0">
+                                <tr>
+                                    <th class="p-3">#</th>
+                                    <th class="p-3">Date</th>
+                                    <th class="p-3">Time</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resultBody" class="divide-y divide-white/5"></tbody>
+                        </table>
                     </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-white/40">Est. Sessions:</span>
-                        <span class="font-bold text-[#099999]" id="hudSessions">-</span>
+                    <div class="grid grid-cols-2 gap-3 mt-4">
+                        <button onclick="exportPDF()" class="bg-red-600 py-3 rounded-xl font-bold"><i class="fa-solid fa-file-pdf mr-2"></i> PDF</button>
+                        <button onclick="exportExcel()" class="bg-green-600 py-3 rounded-xl font-bold"><i class="fa-solid fa-file-excel mr-2"></i> Excel</button>
                     </div>
                 </div>
             </div>
 
         </div>
-    </div>
+
+        <div id="summaryWidget" class="hud-summary">
+            <div class="flex justify-between items-start">
+                <div class="min-w-0 flex-1">
+                    <p class="text-[10px] text-white/40 uppercase font-bold mb-1">Live Preview</p>
+                    <h4 id="hudName" class="font-bold text-sm truncate">-</h4>
+                    <p id="hudCourse" class="text-xs text-[#099999] truncate">-</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-[10px] text-white/40 uppercase font-bold mb-1">Sessions</p>
+                    <p id="hudSessions" class="text-sm font-bold">0</p>
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer-nav flex justify-between items-center gap-4">
+            <button id="prevBtn" onclick="changeStep(-1)" class="h-12 px-6 rounded-xl font-bold text-sm bg-white/5 hidden">Back</button>
+            <button id="nextBtn" onclick="changeStep(1)" class="h-12 flex-1 md:flex-none md:w-48 bg-[#099999] rounded-xl font-bold text-sm shadow-lg shadow-[#099999]/20">Next Step <i class="fa-solid fa-arrow-right ml-2"></i></button>
+        </footer>
+
+        <input type="hidden" id="dailyHours" value="2">
+        <input type="hidden" id="totalHours" value="15">
+    </main>
 
     <script>
-        /* --- CONFIGURATION & DATA --- */
-        const coursesData = {
-            'excel': {
-                name: 'Excel Mastery: From Zero to Hero',
-                topics: 'Getting Started\nCalculations\nData Management\nPivotTables\nDashboards\nMacros'
-            },
-            'powerbi': {
-                name: 'Power BI Business Insights',
-                topics: 'Interface\nETL\nDAX Modeling\nVisualization\nPublishing'
-            },
-            'dataanalysis': {
-                name: 'Data Analysis Specialist',
-                topics: 'Data Cleaning\nEDA\nStatistics\nPython/R\nStorytelling'
-            }
-        };
-
+        const days = ['S','M','T','W','T','F','S'];
+        const daysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         let currentStep = 1;
         const totalSteps = 5;
-        let scheduleData = [];
         let excludedDates = [];
         let logoBase64 = null;
+        let scheduleData = [];
 
-        /* --- INITIALIZATION --- */
         window.addEventListener('DOMContentLoaded', () => {
             const img = document.getElementById('logoPreview');
             if (img.complete) convertImageToBase64(img);
             else img.onload = () => convertImageToBase64(img);
-            updateProgressBar();
+            updateUI();
         });
 
         function convertImageToBase64(imgElement) {
@@ -594,274 +366,118 @@
             } catch(e) { console.log("CORS restricted image"); }
         }
 
-        /* --- NAVIGATION & UX --- */
-        function updateProgressBar() {
-            const pct = ((currentStep - 1) / (totalSteps - 1)) * 100;
-            document.getElementById('progressBar').style.width = pct + "%";
-        }
+        document.getElementById('logoUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if(file){
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    logoBase64 = evt.target.result;
+                    document.getElementById('logoPreview').src = logoBase64;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
 
-        function toggleContrast() {
-            document.body.classList.toggle('high-contrast');
-        }
-
-        function updateSummary() {
-            const name = document.getElementById('traineeName').value || '-';
-            const course = document.getElementById('courseName').value || '-';
-            const total = parseFloat(document.getElementById('totalHours').value);
-            const daily = parseFloat(document.getElementById('dailyHours').value);
-            const sessions = Math.ceil(total / daily);
-
-            document.getElementById('hudName').innerText = name;
-            document.getElementById('hudCourse').innerText = course;
-            document.getElementById('hudSessions').innerText = isNaN(sessions) ? '-' : sessions;
-        }
+        // Dynamic Day generation
+        const daysContainer = document.getElementById('daysContainer');
+        days.forEach((d, i) => {
+            daysContainer.innerHTML += `
+                <label class="cursor-pointer">
+                    <input type="checkbox" class="hidden day-select" value="${i}" onchange="updateSummary()">
+                    <div class="w-9 h-9 md:w-11 md:h-11 rounded-lg border border-white/10 flex items-center justify-center text-xs font-bold transition-all hover:bg-white/10">${d}</div>
+                </label>
+            `;
+        });
 
         function changeStep(dir) {
-            if (dir === 1 && !validateStep(currentStep)) return;
-            
             if (dir === 1 && currentStep === 4) {
-                // Show Skeleton then Generate
-                currentStep += dir;
-                updateUI();
-                updateProgressBar();
-                showSkeletonLoading();
-                return;
+                generateSchedule();
+                triggerConfetti();
             }
-
+            
             currentStep += dir;
+            if (currentStep < 1) currentStep = 1;
+            if (currentStep > 5) currentStep = 5;
             updateUI();
-            updateProgressBar();
         }
 
         function updateUI() {
-            // Content visibility
-            document.querySelectorAll('.step-content').forEach((el, idx) => {
-                if (idx + 1 === currentStep) {
-                    el.classList.add('active');
-                } else {
-                    el.classList.remove('active');
-                }
+            // Content
+            document.querySelectorAll('.step-content').forEach((el, i) => {
+                el.classList.toggle('active', i + 1 === currentStep);
             });
 
-            // HUD Visibility (Steps 3 & 4 only)
-            const hud = document.getElementById('summaryWidget');
-            if(currentStep === 3 || currentStep === 4) {
-                hud.classList.add('visible');
-                updateSummary();
-            } else {
-                hud.classList.remove('visible');
-            }
+            // HUD visibility: Step 2, 3, 4
+            document.getElementById('summaryWidget').classList.toggle('visible', currentStep > 1 && currentStep < 5);
+            
+            // Progress
+            document.getElementById('progressBar').style.width = ((currentStep-1)/(totalSteps-1)*100) + '%';
+            document.getElementById('mobileStepLabel').innerText = `${currentStep}/${totalSteps}`;
 
-            // Mobile Counter
-            document.getElementById('mobileStepCount').innerText = Math.min(currentStep, 5);
-
-            // Sidebar indicators (Desktop)
-            for (let i = 1; i <= 4; i++) {
-                const ind = document.getElementById(`ind-${i}`);
-                if (!ind) continue;
-                const ball = ind.querySelector('div');
-                
-                if (i === currentStep && currentStep !== 5) {
-                    ind.classList.remove('opacity-50'); ind.classList.add('bg-white/5');
-                    ball.classList.add('bg-[#099999]', 'text-white', 'border-[#099999]'); ball.classList.remove('border-white/20');
-                    ball.innerText = i;
-                } else if (i < currentStep) {
-                    ind.classList.remove('opacity-50', 'bg-white/5');
-                    ball.classList.add('bg-[#099999]', 'text-white', 'border-[#099999]');
-                    ball.innerHTML = '<i class="fa-solid fa-check"></i>';
-                } else {
-                    ind.classList.add('opacity-50'); ind.classList.remove('bg-white/5');
-                    ball.classList.remove('bg-[#099999]', 'text-white', 'border-[#099999]'); ball.classList.add('border-white/20');
-                    ball.innerText = i;
-                }
-            }
-
-            // Title & Buttons
-            const titles = ["Trainee Details", "Select Path", "Time & Schedule", "Exclusions", "Final Schedule"];
-            document.getElementById('stepTitle').innerText = titles[currentStep - 1] || "Wizard";
-
-            const prevBtn = document.getElementById('prevBtn');
+            // Buttons
+            document.getElementById('prevBtn').classList.toggle('hidden', currentStep === 1 || currentStep === 5);
             const nextBtn = document.getElementById('nextBtn');
-            
-            prevBtn.classList.toggle('hidden', currentStep === 1 || currentStep === 5);
-            
-            if (currentStep === 5) {
-                nextBtn.innerHTML = '<span>New Schedule</span> <i class="fa-solid fa-plus"></i>';
-                nextBtn.onclick = resetApp;
-            } else if (currentStep === 4) {
-                nextBtn.innerHTML = '<span>Generate</span> <i class="fa-solid fa-wand-magic-sparkles"></i>';
-                nextBtn.onclick = () => changeStep(1);
-            } else {
-                nextBtn.innerHTML = '<span>Next Step</span> <i class="fa-solid fa-arrow-right"></i>';
-                nextBtn.onclick = () => changeStep(1);
-            }
+            if(currentStep === 4) nextBtn.innerHTML = 'Generate <i class="fa-solid fa-wand-magic-sparkles ml-2"></i>';
+            else if(currentStep === 5) nextBtn.innerHTML = 'New Wizard <i class="fa-solid fa-plus ml-2"></i>';
+            else nextBtn.innerHTML = 'Next Step <i class="fa-solid fa-arrow-right ml-2"></i>';
+
+            if(currentStep === 5) nextBtn.onclick = () => window.location.reload();
+            else nextBtn.onclick = () => changeStep(1);
         }
 
-        /* --- VALIDATION --- */
-        function showError(el, id) {
-            el.classList.add('input-error');
-            setTimeout(() => el.classList.remove('input-error'), 500); // Remove shake class
-        }
-
-        function clearError(el) {
-            el.classList.remove('input-error');
-        }
-
-        function validateStep(step) {
-            let isValid = true;
-            if (step === 1) {
-                const name = document.getElementById('traineeName');
-                if (!name.value.trim()) { showError(name); isValid = false; }
-                else clearError(name);
-            }
-            if (step === 2) {
-                const type = document.querySelector('input[name="courseType"]:checked');
-                const customName = document.getElementById('courseName');
-                
-                if (!type) { 
-                    alert("Please select a course path."); // Fallback for radio
-                    isValid = false; 
-                } else if (type.value === 'other' && !customName.value.trim()) {
-                     showError(customName); isValid = false;
-                } else {
-                    clearError(customName);
-                }
-            }
-            if (step === 3) {
-                const start = document.getElementById('startDate');
-                const daysChecked = document.querySelectorAll('.day-select:checked').length > 0;
-                const daysErr = document.getElementById('daysError');
-
-                if (!start.value) { showError(start); isValid = false; } else clearError(start);
-                
-                if (!daysChecked) { 
-                    daysErr.style.display = 'block'; 
-                    document.getElementById('daysContainer').classList.add('border', 'border-red-500/50');
-                    isValid = false; 
-                } else { 
-                    daysErr.style.display = 'none';
-                    document.getElementById('daysContainer').classList.remove('border', 'border-red-500/50');
-                }
-            }
-            return isValid;
-        }
-        
-        function validateField(el) { if(el.value) clearError(el); }
-        function validateDays() { 
-            if(document.querySelectorAll('.day-select:checked').length > 0) {
-                 document.getElementById('daysError').style.display = 'none';
-                 document.getElementById('daysContainer').classList.remove('border', 'border-red-500/50');
-            }
-        }
-
-        /* --- LOGIC HANDLERS --- */
-        function adjustVal(id, amount) {
+        function adjustVal(id, amt) {
             const el = document.getElementById(id);
-            const disp = document.getElementById(id === 'dailyHours' ? 'dispDaily' : 'dispTotal');
-            let val = parseFloat(el.value) + amount;
-            if (val < 0.5) val = 0.5;
+            let val = parseFloat(el.value) + amt;
+            if(val < 0.5) val = 0.5;
             el.value = val;
-            disp.innerText = val;
+            document.getElementById(id === 'dailyHours' ? 'dispDaily' : 'dispTotal').innerText = val;
             updateSummary();
+        }
+
+        function updateSummary() {
+            const name = document.getElementById('traineeName').value || 'New Trainee';
+            const course = document.getElementById('courseName').value || 'Select Course';
+            const total = parseFloat(document.getElementById('totalHours').value);
+            const daily = parseFloat(document.getElementById('dailyHours').value);
+            
+            document.getElementById('hudName').innerText = name;
+            document.getElementById('hudCourse').innerText = course;
+            document.getElementById('hudSessions').innerText = Math.ceil(total/daily);
+
+            // Highlight selected days
+            document.querySelectorAll('.day-select').forEach(cb => {
+                cb.nextElementSibling.classList.toggle('bg-[#099999]', cb.checked);
+                cb.nextElementSibling.classList.toggle('text-white', cb.checked);
+            });
         }
 
         function handleCourseSelect(type) {
-            const customFields = document.getElementById('customCourseFields');
-            const nameInput = document.getElementById('courseName');
-            const topicsInput = document.getElementById('courseTopics');
-
-            if (type === 'other') {
-                customFields.classList.remove('opacity-50', 'pointer-events-none');
-                nameInput.value = ''; topicsInput.value = '';
-                nameInput.readOnly = false; topicsInput.readOnly = false;
-            } else {
-                customFields.classList.add('opacity-50', 'pointer-events-none');
-                nameInput.value = coursesData[type].name;
-                topicsInput.value = coursesData[type].topics;
-                nameInput.readOnly = true; topicsInput.readOnly = true;
-            }
+            const names = { excel: 'Excel Mastery: Zero to Hero', powerbi: 'Power BI Specialist' };
+            document.getElementById('courseName').value = names[type];
             updateSummary();
-        }
-
-        function setPreset(type) {
-            document.querySelectorAll('.day-select').forEach(cb => cb.checked = false);
-            const days = type === 'weekdays' ? [1,2,3,4,5] : [0,1,2,3,4];
-            days.forEach(i => document.querySelector(`.day-select[value="${i}"]`).checked = true);
-            validateDays();
-        }
-
-        function addExcludedDate() {
-            const input = document.getElementById('newExcludedDate');
-            if (input.value && !excludedDates.includes(input.value)) {
-                excludedDates.push(input.value);
-                excludedDates.sort();
-                renderExcluded();
-                input.value = '';
-            }
-        }
-
-        function renderExcluded() {
-            const list = document.getElementById('excludedList');
-            if(excludedDates.length === 0) { list.innerHTML = '<div class="text-center text-white/20 text-xs py-4">No skipped dates added.</div>'; return; }
-            list.innerHTML = excludedDates.map(d => `
-                <div class="flex justify-between items-center bg-red-500/10 border border-red-500/20 px-3 py-2 rounded-lg">
-                    <span class="text-sm font-mono text-red-200">${d}</span>
-                    <button onclick="removeExcluded('${d}')" class="text-red-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-                </div>
-            `).join('');
-        }
-        function removeExcluded(d) { excludedDates = excludedDates.filter(date => date !== d); renderExcluded(); }
-
-        /* --- GENERATION ENGINE --- */
-        function showSkeletonLoading() {
-            const skel = document.getElementById('skeletonLoader');
-            const content = document.getElementById('finalContent');
-            skel.classList.remove('hidden');
-            content.classList.add('hidden', 'opacity-0');
-            
-            setTimeout(() => {
-                generateSchedule(); // Actually generate
-                skel.classList.add('hidden');
-                content.classList.remove('hidden');
-                setTimeout(() => content.classList.remove('opacity-0'), 50);
-                triggerConfetti();
-            }, 800);
-        }
-
-        function triggerConfetti() {
-            confetti({
-                particleCount: 100,
-                spread: 70,
-                origin: { y: 0.6 },
-                colors: ['#099999', '#ffffff', '#3b82f6']
-            });
         }
 
         function generateSchedule() {
             const startDateVal = document.getElementById('startDate').value;
+            if(!startDateVal) return;
+            
             const startTimeStr = document.getElementById('startTime').value;
             const dailyHours = parseFloat(document.getElementById('dailyHours').value);
             const totalHours = parseFloat(document.getElementById('totalHours').value);
             const selectedDays = Array.from(document.querySelectorAll('.day-select:checked')).map(cb => parseInt(cb.value));
             
-            const parts = startDateVal.split('-');
-            let currentDate = new Date(parts[0], parts[1] - 1, parts[2]);
-
+            let currentDate = new Date(startDateVal);
             let hoursScheduled = 0;
             scheduleData = [];
-            let sessionId = 1;
-            const daysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
             let safety = 0;
 
-            while (hoursScheduled < totalHours && safety < 365) {
+            while (hoursScheduled < totalHours && safety < 300) {
                 const dayIdx = currentDate.getDay();
-                const y = currentDate.getFullYear();
-                const m = String(currentDate.getMonth() + 1).padStart(2, '0');
-                const d = String(currentDate.getDate()).padStart(2, '0');
-                const dateStr = `${y}-${m}-${d}`;
+                const dateStr = currentDate.toISOString().split('T')[0];
 
                 if (selectedDays.includes(dayIdx) && !excludedDates.includes(dateStr)) {
                     let sessionHrs = Math.min(dailyHours, totalHours - hoursScheduled);
+                    
                     const [h, min] = startTimeStr.split(':').map(Number);
                     let endH = h + Math.floor(sessionHrs);
                     let endM = min + (sessionHrs % 1) * 60;
@@ -870,11 +486,12 @@
                     const formatTime = (hh, mm) => `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
 
                     scheduleData.push({
-                        id: sessionId++,
+                        id: scheduleData.length + 1,
                         date: dateStr,
                         dayName: daysMap[dayIdx],
                         start: formatTime(h, min),
                         end: formatTime(endH, endM),
+                        time: `${formatTime(h, min)} - ${formatTime(endH, endM)}`,
                         hours: sessionHrs
                     });
                     hoursScheduled += sessionHrs;
@@ -883,46 +500,36 @@
                 safety++;
             }
 
-            renderResult();
-            document.getElementById('resTotalHours').innerText = hoursScheduled;
-            document.getElementById('resTotalSessions').innerText = scheduleData.length;
-        }
-
-        function renderResult() {
-            document.getElementById('resultBody').innerHTML = scheduleData.map((r, i) => `
-                <tr class="hover:bg-white/5 transition group">
-                    <td class="px-4 md:px-6 py-4 font-mono text-white/40">${r.id}</td>
-                    <td class="px-4 md:px-6 py-4 font-medium text-white whitespace-nowrap">${r.date}</td>
-                    <td class="px-4 md:px-6 py-4 text-[#099999]">${r.dayName}</td>
-                    <td class="px-4 md:px-6 py-4" contenteditable="true" onblur="updateRowData(${i}, this)">
-                        <span class="text-xs bg-white/5 rounded-lg px-2 py-1 whitespace-nowrap cursor-text hover:bg-white/10 transition">${r.start} - ${r.end}</span>
-                    </td>
-                    <td class="px-4 md:px-6 py-4 text-right">
-                        <button onclick="removeSession(${i})" class="text-red-400 hover:bg-red-500/20 p-2 rounded-lg transition opacity-0 group-hover:opacity-100"><i class="fa-solid fa-trash"></i></button>
-                    </td>
+            const body = document.getElementById('resultBody');
+            body.innerHTML = scheduleData.map(r => `
+                <tr>
+                    <td class="p-3 text-white/40">${r.id}</td>
+                    <td class="p-3 font-bold">${r.date}</td>
+                    <td class="p-3 text-[#099999]">${r.time}</td>
                 </tr>
             `).join('');
-        }
 
-        function updateRowData(idx, el) {
-            // Placeholder for manual edits logic
-        }
-
-        function removeSession(idx) {
-            scheduleData.splice(idx, 1);
-            scheduleData.forEach((r, i) => r.id = i+1);
-            renderResult();
-            const newTotal = scheduleData.reduce((acc, curr) => acc + curr.hours, 0);
-            document.getElementById('resTotalHours').innerText = newTotal;
             document.getElementById('resTotalSessions').innerText = scheduleData.length;
+            document.getElementById('resTotalHours').innerText = hoursScheduled;
         }
 
-        /* --- EXPORT --- */
+        function addExcludedDate() {
+            const date = document.getElementById('newExcludedDate').value;
+            if(date && !excludedDates.includes(date)) {
+                excludedDates.push(date);
+                document.getElementById('excludedList').innerHTML += `
+                    <div class="bg-red-500/10 border border-red-500/20 p-2 rounded text-xs flex justify-between">
+                        ${date} <i class="fa-solid fa-xmark cursor-pointer" onclick="this.parentElement.remove()"></i>
+                    </div>
+                `;
+            }
+        }
+
         function exportPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            const trainee = document.getElementById('traineeName').value;
-            const course = document.getElementById('courseName').value;
+            const trainee = document.getElementById('traineeName').value || 'Trainee';
+            const course = document.getElementById('courseName').value || 'Course';
 
             doc.setFillColor(9, 153, 153);
             doc.rect(0, 0, 210, 45, 'F');
@@ -947,7 +554,7 @@
             doc.autoTable({
                 startY: 65,
                 head: [['#', 'Date', 'Day', 'Time', 'Duration']],
-                body: scheduleData.map(r => [r.id, r.date, r.dayName, `${r.start} - ${r.end}`, r.hours + ' hrs']),
+                body: scheduleData.map(r => [r.id, r.date, r.dayName, r.time, r.hours + ' hrs']),
                 theme: 'striped',
                 headStyles: { fillColor: [9, 153, 153], textColor: 255, fontStyle: 'bold' },
                 styles: { fontSize: 10, cellPadding: 4 },
@@ -958,8 +565,8 @@
         }
 
         function exportExcel() {
-            const trainee = document.getElementById('traineeName').value;
-            const course = document.getElementById('courseName').value;
+            const trainee = document.getElementById('traineeName').value || 'Trainee';
+            const course = document.getElementById('courseName').value || 'Course';
             const wb = XLSX.utils.book_new();
             const ws_data = [
                 ["X ACADEMY TRAINING SCHEDULE"],
@@ -973,19 +580,14 @@
             XLSX.writeFile(wb, `${trainee}_Schedule.xlsx`);
         }
 
+        function triggerConfetti() {
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#099999', '#ffffff'] });
+        }
+
         function resetApp() { if(confirm("Start new?")) window.location.reload(); }
 
-        document.getElementById('logoUpload').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if(file){
-                const reader = new FileReader();
-                reader.onload = function(evt) {
-                    logoBase64 = evt.target.result;
-                    document.getElementById('logoPreview').src = logoBase64;
-                };
-                reader.readAsDataURL(file);
-            }
-        });
+        // Initial setup
+        updateUI();
     </script>
 </body>
 </html>
