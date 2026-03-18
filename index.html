@@ -22,31 +22,52 @@
             --glass-border: rgba(255, 255, 255, 0.1);
             --text-main: #e2e8f0;
             --bg-main: #020617;
+            --input-bg: rgba(255, 255, 255, 0.05);
+            --card-hover: rgba(9, 153, 153, 0.1);
         }
 
+        body.light-mode {
+            --bg-main: #f8fafc;
+            --text-main: #0f172a;
+            --glass-bg: rgba(255, 255, 255, 0.95);
+            --glass-border: rgba(0, 0, 0, 0.1);
+            --input-bg: #f1f5f9;
+            --card-hover: rgba(9, 153, 153, 0.05);
+        }
+
+        /* 🔴 1. مشكلة UX أساسية - الـ overflow مقفل */
         body { 
             font-family: 'Outfit', sans-serif; 
             background: var(--bg-main);
             color: var(--text-main);
-            overflow: hidden;
-            height: 100vh;
+            overflow-x: hidden;
+            overflow-y: auto;
+            min-height: 100vh;
             width: 100vw;
+            transition: background 0.3s, color 0.3s;
         }
 
-        /* Ambient Background */
         .ambient-bg {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle at 50% -20%, #1e293b, var(--bg-main));
+            background: radial-gradient(circle at 50% -20%, rgba(30, 41, 59, 0.5), var(--bg-main));
             z-index: -2;
         }
 
+        body.light-mode .ambient-bg { background: radial-gradient(circle at 50% -20%, #e2e8f0, var(--bg-main)); }
+
+        /* 🟤 9. الـ Orbs حلوة… بس heavy (تم تقليل الـ blur وتثبيتها على الموبايل) */
         .orb {
-            position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.3;
+            position: fixed; border-radius: 50%; filter: blur(50px); opacity: 0.3;
             animation: floatOrb 20s infinite alternate;
+            z-index: -1;
         }
         .orb-1 { width: 400px; height: 400px; background: var(--primary); top: -100px; left: -100px; }
         .orb-2 { width: 300px; height: 300px; background: #3b82f6; bottom: -50px; right: -50px; }
         
+        @media (max-width: 768px) {
+            .orb { filter: blur(30px); animation: none; }
+        }
+
         @keyframes floatOrb {
             0% { transform: translate(0, 0) scale(1); }
             100% { transform: translate(30px, 30px) scale(1.1); }
@@ -58,107 +79,83 @@
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s;
         }
 
-        /* Responsive Container */
-        .app-container {
-            height: 100vh;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-        }
+        body.light-mode .glass-panel { box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+
+        .app-container { height: 100vh; width: 100%; display: flex; flex-direction: column; }
 
         @media (min-width: 768px) {
-            .app-container {
-                height: 85vh;
-                max-width: 1000px;
-                border-radius: 24px;
-                overflow: hidden;
-            }
+            .app-container { height: 90vh; max-width: 1000px; border-radius: 24px; overflow: hidden; margin: 5vh auto; }
         }
 
-        /* Navigation Fixes */
+        /* 🟠 2. Footer بيغطي المحتوى (استخدام sticky) */
         .footer-nav {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(15, 23, 42, 0.9);
+            position: sticky; bottom: 0;
+            background: var(--glass-bg);
             backdrop-filter: blur(10px);
-            border-top: 1px solid rgba(255,255,255,0.1);
-            padding: 1rem;
-            z-index: 100;
+            border-top: 1px solid var(--glass-border);
+            padding: 1rem; z-index: 100;
         }
 
-        /* Live Preview HUD Reframed */
         .hud-summary {
-            position: absolute;
-            bottom: 85px; 
-            left: 1rem;
-            right: 1rem;
+            position: absolute; bottom: 85px; left: 1rem; right: 1rem;
             background: rgba(9, 153, 153, 0.15);
             backdrop-filter: blur(15px);
             border: 1px solid rgba(9, 153, 153, 0.3);
-            border-radius: 16px;
-            padding: 12px 16px;
-            z-index: 90;
+            border-radius: 16px; padding: 12px 16px; z-index: 90;
             transform: translateY(200%);
             transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
+        body.light-mode .hud-summary { color: #0f172a; background: rgba(9, 153, 153, 0.1); }
 
         @media (min-width: 768px) {
-            .hud-summary {
-                width: 300px;
-                left: auto;
-                right: 24px;
-                bottom: 100px;
-            }
+            .hud-summary { width: 300px; left: auto; right: 24px; bottom: 100px; }
         }
 
         .hud-summary.visible { transform: translateY(0); }
 
-        .step-content { display: none; height: 100%; overflow-y: auto; padding-bottom: 180px; }
+        /* 🟠 2. مسح الـ padding الكبير */
+        .step-content { display: none; height: 100%; overflow-y: auto; padding-bottom: 20px; }
         .step-content.active { display: block; animation: fadeIn 0.4s ease; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         .custom-input {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: white;
-            padding: 12px 16px;
-            border-radius: 12px;
-            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--glass-border);
+            color: inherit; padding: 12px 16px; border-radius: 12px; width: 100%;
             transition: all 0.3s;
         }
-        .custom-input:focus { border-color: var(--primary); outline: none; background: rgba(255, 255, 255, 0.08); }
+        .custom-input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 10px rgba(9,153,153,0.2); }
 
-        /* Card Selection */
         .card-radio:checked + .card-design {
-            border-color: var(--primary);
-            background: rgba(9, 153, 153, 0.1);
+            border-color: var(--primary); background: var(--card-hover);
             box-shadow: 0 0 15px rgba(9, 153, 153, 0.2);
         }
         
-        .progress-bar {
-            height: 4px;
-            background: rgba(255,255,255,0.1);
-            width: 100%;
-            position: absolute;
-            top: 0;
-            left: 0;
-        }
-        .progress-fill {
-            height: 100%;
-            background: var(--primary);
-            width: 0%;
-            transition: width 0.5s ease;
-            box-shadow: 0 0 10px var(--primary);
-        }
+        .progress-bar { height: 4px; background: var(--glass-border); width: 100%; position: absolute; top: 0; left: 0; }
+        .progress-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.5s ease; box-shadow: 0 0 10px var(--primary); }
 
-        /* Scrollbar */
         ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+
+        /* 🟣 6. الـ Toast سيء بالموبايل */
+        #toast { position: fixed; bottom: 20px; left: 50%; transform: translate(-50%, 150%); background: #ef4444; color: white; padding: 12px 24px; border-radius: 8px; z-index: 999; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); font-weight: bold; box-shadow: 0 5px 15px rgba(0,0,0,0.3); white-space: nowrap; }
+        #toast.show { transform: translate(-50%, 0); }
+        #toast.success { background: #10b981; }
+        #toast.warning { background: #f59e0b; }
+
+        /* Skeleton Loading */
+        .skeleton { background: linear-gradient(90deg, var(--input-bg) 25%, rgba(255,255,255,0.1) 50%, var(--input-bg) 75%); background-size: 200% 100%; animation: loading 1.5s infinite; border-radius: 4px; }
+        body.light-mode .skeleton { background: linear-gradient(90deg, #e2e8f0 25%, #f8fafc 50%, #e2e8f0 75%); background-size: 200% 100%; }
+        @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        
+        /* 🔵 5. الـ Buttons شكلها “system-like” */
+        .btn-hover { transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s; }
+        .btn-hover:hover { transform: scale(1.03); }
+        .btn-hover:active { transform: scale(0.97); }
     </style>
 </head>
 <body class="flex items-center justify-center">
@@ -166,38 +163,60 @@
     <div class="ambient-bg"></div>
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
+    
+    <div id="toast"></div>
+
+    <div id="editModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000] hidden items-center justify-center opacity-0 transition-opacity duration-300">
+        <div class="glass-panel p-6 rounded-2xl w-[90%] max-w-sm transform scale-95 transition-transform duration-300" id="editModalContent">
+            <h3 class="font-bold text-lg mb-4 text-[#099999]"><i class="fa-solid fa-pen-to-square mr-2"></i>Edit Session</h3>
+            <label class="text-xs font-bold text-gray-300 uppercase block mb-2">Change Date</label>
+            <input type="date" id="editSessionDate" class="custom-input mb-6">
+            <div class="flex justify-end gap-2">
+                <button onclick="deleteSessionBtn()" class="btn-hover bg-red-500/10 border border-red-500/50 text-red-500 px-4 py-2 rounded-xl font-bold hover:bg-red-500 hover:text-white transition">Delete</button>
+                <button onclick="closeEditModal()" class="btn-hover bg-transparent border border-gray-500/50 px-4 py-2 rounded-xl font-bold hover:bg-gray-500/20 transition">Cancel</button>
+                <button onclick="saveEditSession()" class="btn-hover bg-[#099999] text-white px-5 py-2 rounded-xl font-bold shadow-[0_0_15px_rgba(9,153,153,0.4)]">Save</button>
+            </div>
+        </div>
+    </div>
 
     <main class="app-container glass-panel relative">
         <div class="progress-bar"><div id="progressBar" class="progress-fill"></div></div>
 
-        <header class="p-4 md:p-6 border-b border-white/5 flex justify-between items-center shrink-0 bg-black/20">
+        <header class="p-4 md:p-6 border-b border-black/10 dark:border-white/5 flex justify-between items-center shrink-0">
             <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-lg bg-[#099999] flex items-center justify-center text-white font-bold">X</div>
+                <div class="w-8 h-8 rounded-lg bg-[#099999] flex items-center justify-center text-white font-bold shadow-[0_0_10px_rgba(9,153,153,0.4)]">X</div>
                 <h1 class="font-bold text-sm md:text-base">Wizard <span class="text-[#099999]" id="mobileStepLabel">1/5</span></h1>
             </div>
             <div class="flex gap-2">
-                <button onclick="resetApp()" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-xs"><i class="fa-solid fa-rotate-right"></i></button>
+                <button onclick="loadSchedule()" class="btn-hover w-8 h-8 rounded-full bg-blue-500/20 text-blue-500 flex items-center justify-center text-xs" title="Load Saved"><i class="fa-solid fa-folder-open"></i></button>
+                <button onclick="toggleTheme()" class="btn-hover w-8 h-8 rounded-full bg-yellow-500/20 text-yellow-500 flex items-center justify-center text-xs" title="Toggle Theme"><i class="fa-solid fa-moon" id="themeIcon"></i></button>
+                <button onclick="resetApp()" class="btn-hover w-8 h-8 rounded-full bg-red-500/20 text-red-500 flex items-center justify-center text-xs" title="Reset"><i class="fa-solid fa-rotate-right"></i></button>
             </div>
         </header>
 
-        <div class="flex-1 overflow-hidden relative p-4 md:p-8">
+        <div class="flex-1 overflow-y-auto relative p-4 md:p-8 custom-scrollbar">
             
             <div id="step-1" class="step-content active">
                 <div class="max-w-md mx-auto space-y-6">
-                    <div class="text-center md:text-left">
-                        <h2 class="text-2xl font-bold">Trainee Info</h2>
-                        <p class="text-white/50 text-sm">Let's start with the basics.</p>
-                    </div>
+                    <div class="text-center md:text-left mb-6">
+                        <span class="text-[#099999] text-xs font-bold uppercase tracking-wider block mb-1">Step 1</span>
+                        <h2 class="text-2xl font-bold"><i class="fa-solid fa-user-astronaut text-[#099999] mr-2"></i>Trainee Info</h2>
+                        <p class="text-gray-300 text-sm mt-1">Let's start with the basics.</p> </div>
                     <div>
-                        <label class="text-xs font-bold text-[#099999] uppercase block mb-2">Full Name</label>
+                        <label class="text-xs font-bold text-[#099999] uppercase block mb-2">Full Name <span class="text-red-500">*</span></label>
                         <input type="text" id="traineeName" class="custom-input text-lg" placeholder="Ahmad Ali..." oninput="updateSummary()">
                     </div>
                     <div>
+                        <label class="text-xs font-bold text-[#099999] uppercase block mb-2">Trainer Mode (Optional)</label>
+                        <input type="text" id="groupName" class="custom-input text-sm" placeholder="e.g. Group A / Dar Al Dawa">
+                    </div>
+                    <div>
                         <label class="text-xs font-bold text-[#099999] uppercase block mb-2">Branding (Optional)</label>
-                        <div class="flex items-center gap-4 p-4 border-2 border-dashed border-white/10 rounded-xl">
+                        <div class="flex items-center gap-4 p-4 border-2 border-dashed border-gray-500/30 rounded-xl relative">
                             <input type="file" id="logoUpload" class="hidden" accept="image/*">
-                            <label for="logoUpload" class="cursor-pointer bg-white/10 px-4 py-2 rounded-lg text-xs font-bold hover:bg-white/20 transition">Upload Logo</label>
+                            <label for="logoUpload" class="btn-hover cursor-pointer bg-black/10 dark:bg-white/10 px-4 py-2 rounded-lg text-xs font-bold hover:bg-black/20 transition border border-gray-500/30">Upload Logo</label>
                             <img id="logoPreview" src="https://raw.githubusercontent.com/BaselGhanem/Schedule/refs/heads/main/X%20Academy%20Logo.png" class="w-10 h-10 object-contain" crossorigin="anonymous">
+                            <div id="uploadSuccess" class="hidden absolute right-4 text-green-500 animate-bounce"><i class="fa-solid fa-circle-check text-xl"></i></div>
                         </div>
                     </div>
                 </div>
@@ -205,20 +224,23 @@
 
             <div id="step-2" class="step-content">
                 <div class="max-w-2xl mx-auto">
-                    <h2 class="text-xl font-bold mb-6 text-center">Choose Learning Path</h2>
+                    <div class="text-center mb-6">
+                        <span class="text-[#099999] text-xs font-bold uppercase tracking-wider block mb-1">Step 2</span>
+                        <h2 class="text-xl font-bold"><i class="fa-solid fa-layer-group text-[#099999] mr-2"></i>Choose Learning Path <span class="text-red-500">*</span></h2>
+                    </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <label class="cursor-pointer">
+                        <label class="cursor-pointer btn-hover">
                             <input type="radio" name="courseType" value="excel" class="hidden card-radio" onchange="handleCourseSelect('excel')">
-                            <div class="card-design p-5 border border-white/10 rounded-2xl h-full transition flex items-center gap-4">
-                                <div class="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center text-green-500 text-xl"><i class="fa-solid fa-file-excel"></i></div>
-                                <div><h3 class="font-bold">Excel Mastery</h3><p class="text-xs text-white/40">Zero to Hero</p></div>
+                            <div class="card-design p-5 border border-gray-500/20 rounded-2xl h-full transition flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center text-green-500 text-xl shrink-0"><i class="fa-solid fa-file-excel"></i></div>
+                                <div><h3 class="font-bold">Excel Mastery</h3><p class="text-xs text-gray-300">15 Hours (Suggested)</p></div>
                             </div>
                         </label>
-                        <label class="cursor-pointer">
+                        <label class="cursor-pointer btn-hover">
                             <input type="radio" name="courseType" value="powerbi" class="hidden card-radio" onchange="handleCourseSelect('powerbi')">
-                            <div class="card-design p-5 border border-white/10 rounded-2xl h-full transition flex items-center gap-4">
-                                <div class="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center text-yellow-500 text-xl"><i class="fa-solid fa-chart-pie"></i></div>
-                                <div><h3 class="font-bold">Power BI</h3><p class="text-xs text-white/40">BI Specialist</p></div>
+                            <div class="card-design p-5 border border-gray-500/20 rounded-2xl h-full transition flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center text-yellow-500 text-xl shrink-0"><i class="fa-solid fa-chart-pie"></i></div>
+                                <div><h3 class="font-bold">Power BI</h3><p class="text-xs text-gray-300">20 Hours (Suggested)</p></div>
                             </div>
                         </label>
                     </div>
@@ -230,9 +252,13 @@
 
             <div id="step-3" class="step-content">
                 <div class="max-w-md mx-auto space-y-6">
+                    <div class="text-center mb-6">
+                        <span class="text-[#099999] text-xs font-bold uppercase tracking-wider block mb-1">Step 3</span>
+                        <h2 class="text-xl font-bold"><i class="fa-solid fa-calendar-days text-[#099999] mr-2"></i>Timing & Days</h2>
+                    </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="text-[10px] font-bold text-[#099999] uppercase mb-1 block">Start Date</label>
+                            <label class="text-[10px] font-bold text-[#099999] uppercase mb-1 block">Start Date <span class="text-red-500">*</span></label>
                             <input type="date" id="startDate" class="custom-input">
                         </div>
                         <div>
@@ -241,75 +267,98 @@
                         </div>
                     </div>
                     
-                    <div class="bg-white/5 p-4 rounded-xl space-y-4">
+                    <div class="bg-black/5 dark:bg-white/5 p-4 rounded-xl space-y-4 border border-gray-500/10">
                         <div class="flex justify-between items-center">
-                            <span class="text-sm">Hours per Session</span>
+                            <span class="text-sm font-bold">Hours per Session</span>
                             <div class="flex items-center gap-3">
-                                <button onclick="adjustVal('dailyHours', -0.5)" class="w-8 h-8 rounded bg-white/10">-</button>
+                                <button onclick="adjustVal('dailyHours', -0.5)" class="btn-hover w-8 h-8 rounded bg-black/10 dark:bg-white/10 border border-gray-500/20">-</button>
                                 <span id="dispDaily" class="font-bold text-[#099999]">2</span>
-                                <button onclick="adjustVal('dailyHours', 0.5)" class="w-8 h-8 rounded bg-white/10">+</button>
+                                <button onclick="adjustVal('dailyHours', 0.5)" class="btn-hover w-8 h-8 rounded bg-black/10 dark:bg-white/10 border border-gray-500/20">+</button>
                             </div>
                         </div>
                         <div class="flex justify-between items-center">
-                            <span class="text-sm">Total Course Hours</span>
+                            <span class="text-sm font-bold">Total Course Hours</span>
                             <div class="flex items-center gap-3">
-                                <button onclick="adjustVal('totalHours', -1)" class="w-8 h-8 rounded bg-white/10">-</button>
+                                <button onclick="adjustVal('totalHours', -1)" class="btn-hover w-8 h-8 rounded bg-black/10 dark:bg-white/10 border border-gray-500/20">-</button>
                                 <span id="dispTotal" class="font-bold text-[#099999]">15</span>
-                                <button onclick="adjustVal('totalHours', 1)" class="w-8 h-8 rounded bg-white/10">+</button>
+                                <button onclick="adjustVal('totalHours', 1)" class="btn-hover w-8 h-8 rounded bg-black/10 dark:bg-white/10 border border-gray-500/20">+</button>
                             </div>
                         </div>
+                        <label class="flex items-center gap-2 cursor-pointer pt-2 border-t border-gray-500/20 mt-2">
+                            <input type="checkbox" id="includeBreaks" class="w-4 h-4 accent-[#099999]">
+                            <span class="text-sm">Include 10-Min Break (Mid-session)</span>
+                        </label>
                     </div>
 
                     <div>
-                        <label class="text-[10px] font-bold text-[#099999] uppercase mb-2 block text-center">Training Days</label>
-                        <div class="flex justify-center gap-2" id="daysContainer">
-                            </div>
+                        <label class="text-[10px] font-bold text-[#099999] uppercase mb-2 block text-center">Training Days <span class="text-red-500">*</span></label>
+                        <div class="flex justify-center gap-2 flex-wrap" id="daysContainer"></div>
                     </div>
                 </div>
             </div>
 
             <div id="step-4" class="step-content">
                 <div class="max-w-md mx-auto text-center space-y-6">
-                    <div class="w-16 h-16 bg-red-500/20 text-red-500 rounded-full flex items-center justify-center mx-auto text-2xl">
+                    <span class="text-[#099999] text-xs font-bold uppercase tracking-wider block mb-1">Step 4</span>
+                    <div class="w-16 h-16 bg-red-500/20 text-red-500 rounded-full flex items-center justify-center mx-auto text-2xl shadow-[0_0_15px_rgba(239,68,68,0.2)]">
                         <i class="fa-solid fa-calendar-circle-exclamation"></i>
                     </div>
                     <h2 class="text-xl font-bold">Skip Dates?</h2>
-                    <p class="text-white/40 text-sm">Add any holidays or personal breaks.</p>
+                    <p class="text-gray-300 text-sm">Add any holidays or personal breaks.</p>
                     <div class="flex gap-2">
                         <input type="date" id="newExcludedDate" class="custom-input">
-                        <button onclick="addExcludedDate()" class="bg-red-500 px-4 rounded-xl font-bold text-sm">Skip</button>
+                        <button onclick="addExcludedDate()" class="btn-hover bg-red-500 text-white px-4 rounded-xl font-bold text-sm shadow-[0_0_10px_rgba(239,68,68,0.4)]">Skip</button>
                     </div>
-                    <div id="excludedList" class="space-y-2"></div>
+                    <div id="excludedList" class="space-y-2 max-h-40 overflow-y-auto custom-scrollbar"></div>
                 </div>
             </div>
 
             <div id="step-5" class="step-content">
                 <div class="flex flex-col h-full">
-                    <div class="grid grid-cols-2 gap-4 mb-4">
-                        <div class="bg-[#099999]/10 p-4 rounded-2xl text-center">
+                    <div class="text-center mb-4 hidden md:block">
+                        <span class="text-[#099999] text-xs font-bold uppercase tracking-wider block mb-1">Step 5</span>
+                        <h2 class="text-xl font-bold"><i class="fa-solid fa-flag-checkered text-[#099999] mr-2"></i>Final Schedule</h2>
+                    </div>
+
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+                        <div class="bg-[#099999]/10 p-3 rounded-xl text-center border border-[#099999]/20">
                             <div class="text-[10px] text-[#099999] uppercase font-bold">Sessions</div>
-                            <div id="resTotalSessions" class="text-2xl font-bold">0</div>
+                            <div id="resTotalSessions" class="text-xl font-bold">0</div>
                         </div>
-                        <div class="bg-blue-500/10 p-4 rounded-2xl text-center">
-                            <div class="text-[10px] text-blue-400 uppercase font-bold">Total Hrs</div>
-                            <div id="resTotalHours" class="text-2xl font-bold">0</div>
+                        <div class="bg-blue-500/10 p-3 rounded-xl text-center border border-blue-500/20">
+                            <div class="text-[10px] text-blue-500 uppercase font-bold">Total Hrs</div>
+                            <div id="resTotalHours" class="text-xl font-bold">0</div>
+                        </div>
+                        <div class="bg-purple-500/10 p-3 rounded-xl text-center border border-purple-500/20">
+                            <div class="text-[10px] text-purple-500 uppercase font-bold">Duration</div>
+                            <div id="resDuration" class="text-xl font-bold">0 D</div>
+                        </div>
+                        <div class="bg-orange-500/10 p-3 rounded-xl text-center border border-orange-500/20">
+                            <div class="text-[10px] text-orange-500 uppercase font-bold">End Date</div>
+                            <div id="resEndDate" class="text-sm font-bold mt-1">-</div>
                         </div>
                     </div>
-                    <div class="flex-1 overflow-auto rounded-xl border border-white/10">
+
+                    <div class="flex-1 overflow-auto rounded-xl border border-gray-500/20 bg-black/5 dark:bg-white/5 custom-scrollbar relative">
+                        <p class="text-[10px] text-center p-2 text-gray-300 bg-black/10 dark:bg-white/10"><i class="fa-solid fa-pen mr-1"></i> Click any session to edit/delete</p>
                         <table class="w-full text-left text-xs">
-                            <thead class="bg-white/5 sticky top-0">
+                            <thead class="bg-black/10 dark:bg-white/10 sticky top-0 backdrop-blur-md z-10">
                                 <tr>
                                     <th class="p-3">#</th>
                                     <th class="p-3">Date</th>
                                     <th class="p-3">Time</th>
+                                    <th class="p-3 text-right">Hrs</th>
                                 </tr>
                             </thead>
-                            <tbody id="resultBody" class="divide-y divide-white/5"></tbody>
+                            <tbody id="resultBody" class="divide-y divide-gray-500/20"></tbody>
                         </table>
                     </div>
-                    <div class="grid grid-cols-2 gap-3 mt-4">
-                        <button onclick="exportPDF()" class="bg-red-600 py-3 rounded-xl font-bold"><i class="fa-solid fa-file-pdf mr-2"></i> PDF</button>
-                        <button onclick="exportExcel()" class="bg-green-600 py-3 rounded-xl font-bold"><i class="fa-solid fa-file-excel mr-2"></i> Excel</button>
+
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-4">
+                        <button onclick="exportPDF()" class="btn-hover bg-transparent border border-red-500 text-red-500 hover:bg-red-500 hover:text-white py-2 rounded-xl font-bold text-sm transition"><i class="fa-solid fa-file-pdf mr-1"></i> PDF</button>
+                        <button onclick="exportExcel()" class="btn-hover bg-transparent border border-green-500 text-green-500 hover:bg-green-500 hover:text-white py-2 rounded-xl font-bold text-sm transition"><i class="fa-solid fa-file-excel mr-1"></i> Excel</button>
+                        <button onclick="exportCalendar()" class="btn-hover bg-transparent border border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white py-2 rounded-xl font-bold text-sm transition"><i class="fa-solid fa-calendar-plus mr-1"></i> G-Cal</button>
+                        <button onclick="shareLink()" class="btn-hover bg-purple-600 text-white py-2 rounded-xl font-bold text-sm shadow-[0_0_10px_rgba(147,51,234,0.4)]"><i class="fa-solid fa-share-nodes mr-1"></i> Share</button>
                     </div>
                 </div>
             </div>
@@ -319,20 +368,20 @@
         <div id="summaryWidget" class="hud-summary">
             <div class="flex justify-between items-start">
                 <div class="min-w-0 flex-1">
-                    <p class="text-[10px] text-white/40 uppercase font-bold mb-1">Live Preview</p>
+                    <p class="text-[10px] text-gray-300 uppercase font-bold mb-1">Live Preview</p>
                     <h4 id="hudName" class="font-bold text-sm truncate">-</h4>
                     <p id="hudCourse" class="text-xs text-[#099999] truncate">-</p>
                 </div>
                 <div class="text-right">
-                    <p class="text-[10px] text-white/40 uppercase font-bold mb-1">Sessions</p>
+                    <p class="text-[10px] text-gray-300 uppercase font-bold mb-1">Sessions</p>
                     <p id="hudSessions" class="text-sm font-bold">0</p>
                 </div>
             </div>
         </div>
 
         <footer class="footer-nav flex justify-between items-center gap-4">
-            <button id="prevBtn" onclick="changeStep(-1)" class="h-12 px-6 rounded-xl font-bold text-sm bg-white/5 hidden">Back</button>
-            <button id="nextBtn" onclick="changeStep(1)" class="h-12 flex-1 md:flex-none md:w-48 bg-[#099999] rounded-xl font-bold text-sm shadow-lg shadow-[#099999]/20">Next Step <i class="fa-solid fa-arrow-right ml-2"></i></button>
+            <button id="prevBtn" onclick="changeStep(-1)" class="btn-hover h-12 px-6 rounded-xl font-bold text-sm bg-transparent border border-gray-500/30 hover:bg-black/10 dark:hover:bg-white/10 transition hidden">Back</button>
+            <button id="nextBtn" onclick="changeStep(1)" class="btn-hover h-12 flex-1 md:flex-none md:w-48 bg-[#099999] text-white rounded-xl font-bold text-sm shadow-[0_0_15px_rgba(9,153,153,0.4)] transition">Next Step <i class="fa-solid fa-arrow-right ml-2"></i></button>
         </footer>
 
         <input type="hidden" id="dailyHours" value="2">
@@ -340,20 +389,61 @@
     </main>
 
     <script>
-        const days = ['S','M','T','W','T','F','S'];
+        const days = ['Su','Mo','Tu','We','Th','Fr','Sa'];
         const daysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         let currentStep = 1;
         const totalSteps = 5;
         let excludedDates = [];
         let logoBase64 = null;
         let scheduleData = [];
+        let currentEditIndex = null;
 
         window.addEventListener('DOMContentLoaded', () => {
             const img = document.getElementById('logoPreview');
             if (img.complete) convertImageToBase64(img);
             else img.onload = () => convertImageToBase64(img);
+            
+            parseUrlParams();
             updateUI();
         });
+
+        function showToast(msg, type = 'error') {
+            const toast = document.getElementById('toast');
+            toast.className = `show ${type}`;
+            toast.innerText = msg;
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // 🔥 10. Sound Effect Generator
+        function playGenerateSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gainNode = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+                osc.connect(gainNode);
+                gainNode.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.1);
+            } catch(e) {}
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('light-mode');
+            const icon = document.getElementById('themeIcon');
+            if(document.body.classList.contains('light-mode')) {
+                icon.classList.replace('fa-moon', 'fa-sun');
+                localStorage.setItem('theme', 'light');
+            } else {
+                icon.classList.replace('fa-sun', 'fa-moon');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+        if(localStorage.getItem('theme') === 'light') toggleTheme();
 
         function convertImageToBase64(imgElement) {
             try {
@@ -373,26 +463,61 @@
                 reader.onload = function(evt) {
                     logoBase64 = evt.target.result;
                     document.getElementById('logoPreview').src = logoBase64;
+                    // ⚪ 8. Branding feedback
+                    const successIcon = document.getElementById('uploadSuccess');
+                    successIcon.classList.remove('hidden');
+                    setTimeout(() => successIcon.classList.add('hidden'), 3000);
                 };
                 reader.readAsDataURL(file);
             }
         });
 
-        // Dynamic Day generation
         const daysContainer = document.getElementById('daysContainer');
         days.forEach((d, i) => {
             daysContainer.innerHTML += `
-                <label class="cursor-pointer">
+                <label class="cursor-pointer btn-hover">
                     <input type="checkbox" class="hidden day-select" value="${i}" onchange="updateSummary()">
-                    <div class="w-9 h-9 md:w-11 md:h-11 rounded-lg border border-white/10 flex items-center justify-center text-xs font-bold transition-all hover:bg-white/10">${d}</div>
+                    <div class="w-10 h-10 md:w-11 md:h-11 rounded-lg border border-gray-500/30 flex items-center justify-center text-xs font-bold transition-all hover:bg-black/10 dark:hover:bg-white/10">${d}</div>
                 </label>
             `;
         });
 
+        function validateStep(step) {
+            if (step === 1) {
+                if (!document.getElementById('traineeName').value.trim()) { showToast('Full Name is required!'); return false; }
+            } else if (step === 2) {
+                if (!document.getElementById('courseName').value.trim()) { showToast('Please select or enter a course!'); return false; }
+            } else if (step === 3) {
+                if (!document.getElementById('startDate').value) { showToast('Start Date is required!'); return false; }
+                const selected = document.querySelectorAll('.day-select:checked').length;
+                if (selected === 0) { showToast('Select at least one training day!'); return false; }
+                const daily = parseFloat(document.getElementById('dailyHours').value);
+                const total = parseFloat(document.getElementById('totalHours').value);
+                if (daily > total) {
+                    document.getElementById('dailyHours').value = total;
+                    document.getElementById('dispDaily').innerText = total;
+                    showToast('Daily hours auto-corrected!', 'warning');
+                    return false; 
+                }
+            }
+            return true;
+        }
+
         function changeStep(dir) {
+            if (dir === 1 && !validateStep(currentStep)) return;
+
+            if (dir === 1 && currentStep === 3) {
+                const daily = parseFloat(document.getElementById('dailyHours').value);
+                const total = parseFloat(document.getElementById('totalHours').value);
+                const daysCount = document.querySelectorAll('.day-select:checked').length;
+                const expectedWeeks = Math.ceil((total / daily) / daysCount);
+                if (expectedWeeks > 12) {
+                    if(!confirm(`Warning: Schedule spans over ${expectedWeeks} weeks (> 3 months). Continue?`)) return;
+                }
+            }
+
             if (dir === 1 && currentStep === 4) {
                 generateSchedule();
-                triggerConfetti();
             }
             
             currentStep += dir;
@@ -402,19 +527,14 @@
         }
 
         function updateUI() {
-            // Content
             document.querySelectorAll('.step-content').forEach((el, i) => {
                 el.classList.toggle('active', i + 1 === currentStep);
             });
 
-            // HUD visibility: Step 2, 3, 4
             document.getElementById('summaryWidget').classList.toggle('visible', currentStep > 1 && currentStep < 5);
-            
-            // Progress
             document.getElementById('progressBar').style.width = ((currentStep-1)/(totalSteps-1)*100) + '%';
             document.getElementById('mobileStepLabel').innerText = `${currentStep}/${totalSteps}`;
 
-            // Buttons
             document.getElementById('prevBtn').classList.toggle('hidden', currentStep === 1 || currentStep === 5);
             const nextBtn = document.getElementById('nextBtn');
             if(currentStep === 4) nextBtn.innerHTML = 'Generate <i class="fa-solid fa-wand-magic-sparkles ml-2"></i>';
@@ -444,73 +564,195 @@
             document.getElementById('hudCourse').innerText = course;
             document.getElementById('hudSessions').innerText = Math.ceil(total/daily);
 
-            // Highlight selected days
             document.querySelectorAll('.day-select').forEach(cb => {
                 cb.nextElementSibling.classList.toggle('bg-[#099999]', cb.checked);
                 cb.nextElementSibling.classList.toggle('text-white', cb.checked);
+                cb.nextElementSibling.classList.toggle('shadow-[0_0_10px_rgba(9,153,153,0.4)]', cb.checked);
             });
         }
 
         function handleCourseSelect(type) {
             const names = { excel: 'Excel Mastery: Zero to Hero', powerbi: 'Power BI Specialist' };
+            const hours = { excel: 15, powerbi: 20 };
             document.getElementById('courseName').value = names[type];
+            document.getElementById('totalHours').value = hours[type];
+            document.getElementById('dispTotal').innerText = hours[type];
+            
+            document.querySelectorAll('.day-select').forEach(cb => cb.checked = false);
+            document.querySelector('.day-select[value="2"]').checked = true;
+            document.querySelector('.day-select[value="6"]').checked = true;
+            
+            showToast('Smart Config Applied!', 'success');
             updateSummary();
         }
 
-        function generateSchedule() {
-            const startDateVal = document.getElementById('startDate').value;
-            if(!startDateVal) return;
-            
-            const startTimeStr = document.getElementById('startTime').value;
-            const dailyHours = parseFloat(document.getElementById('dailyHours').value);
-            const totalHours = parseFloat(document.getElementById('totalHours').value);
-            const selectedDays = Array.from(document.querySelectorAll('.day-select:checked')).map(cb => parseInt(cb.value));
-            
-            let currentDate = new Date(startDateVal);
-            let hoursScheduled = 0;
-            scheduleData = [];
-            let safety = 0;
-
-            while (hoursScheduled < totalHours && safety < 300) {
-                const dayIdx = currentDate.getDay();
-                const dateStr = currentDate.toISOString().split('T')[0];
-
-                if (selectedDays.includes(dayIdx) && !excludedDates.includes(dateStr)) {
-                    let sessionHrs = Math.min(dailyHours, totalHours - hoursScheduled);
-                    
-                    const [h, min] = startTimeStr.split(':').map(Number);
-                    let endH = h + Math.floor(sessionHrs);
-                    let endM = min + (sessionHrs % 1) * 60;
-                    if(endM >= 60) { endH++; endM -= 60; }
-                    
-                    const formatTime = (hh, mm) => `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
-
-                    scheduleData.push({
-                        id: scheduleData.length + 1,
-                        date: dateStr,
-                        dayName: daysMap[dayIdx],
-                        start: formatTime(h, min),
-                        end: formatTime(endH, endM),
-                        time: `${formatTime(h, min)} - ${formatTime(endH, endM)}`,
-                        hours: sessionHrs
-                    });
-                    hoursScheduled += sessionHrs;
-                }
-                currentDate.setDate(currentDate.getDate() + 1);
-                safety++;
-            }
-
+        function renderSkeleton() {
             const body = document.getElementById('resultBody');
-            body.innerHTML = scheduleData.map(r => `
+            body.innerHTML = Array(5).fill(0).map(() => `
                 <tr>
-                    <td class="p-3 text-white/40">${r.id}</td>
-                    <td class="p-3 font-bold">${r.date}</td>
-                    <td class="p-3 text-[#099999]">${r.time}</td>
+                    <td class="p-3"><div class="skeleton h-4 w-6"></div></td>
+                    <td class="p-3"><div class="skeleton h-4 w-20 mb-1"></div><div class="skeleton h-3 w-16"></div></td>
+                    <td class="p-3"><div class="skeleton h-4 w-24"></div></td>
+                    <td class="p-3"><div class="skeleton h-4 w-8 float-right"></div></td>
                 </tr>
             `).join('');
+        }
 
+        function generateSchedule() {
+            // 🔥 10. Skeleton Loading effect
+            renderSkeleton();
+
+            setTimeout(() => {
+                const startDateVal = document.getElementById('startDate').value;
+                const startTimeStr = document.getElementById('startTime').value;
+                const dailyHours = parseFloat(document.getElementById('dailyHours').value);
+                const totalHours = parseFloat(document.getElementById('totalHours').value);
+                const selectedDays = Array.from(document.querySelectorAll('.day-select:checked')).map(cb => parseInt(cb.value));
+                const hasBreak = document.getElementById('includeBreaks').checked;
+                
+                let currentDate = new Date(startDateVal);
+                let hoursScheduled = 0;
+                scheduleData = [];
+                
+                const expectedTotalDays = Math.ceil(totalHours / dailyHours) * 7; 
+                let loopLimit = expectedTotalDays + 365;
+                let loopCount = 0;
+
+                while (hoursScheduled < totalHours && loopCount < loopLimit) {
+                    const dayIdx = currentDate.getDay();
+                    const dateStr = currentDate.toISOString().split('T')[0];
+
+                    if (selectedDays.includes(dayIdx) && !excludedDates.includes(dateStr)) {
+                        let sessionHrs = Math.min(dailyHours, totalHours - hoursScheduled);
+                        const [startH, startM] = startTimeStr.split(':').map(Number);
+                        
+                        let endH = startH + Math.floor(sessionHrs);
+                        let endM = startM + (sessionHrs % 1) * 60;
+                        if(endM >= 60) { endH++; endM -= 60; }
+                        
+                        const formatTime = (h, m) => `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+                        let timeDisplay = `${formatTime(startH, startM)} - ${formatTime(endH, endM)}`;
+                        
+                        if (hasBreak && sessionHrs > 1) {
+                            let midH = startH + Math.floor(sessionHrs/2);
+                            let midM = startM + ((sessionHrs/2) % 1) * 60;
+                            if(midM >= 60) { midH++; midM -= 60; }
+                            
+                            let afterBreakM = midM + 10;
+                            let afterBreakH = midH;
+                            if(afterBreakM >= 60) { afterBreakH++; afterBreakM -= 60; }
+                            
+                            endM += 10;
+                            if(endM >= 60) { endH++; endM -= 60; }
+
+                            timeDisplay = `${formatTime(startH, startM)} to ${formatTime(midH, midM)}<br><span class="text-orange-500 text-[10px]"><i class="fa-solid fa-mug-hot"></i> 10m Break</span><br>${formatTime(afterBreakH, afterBreakM)} to ${formatTime(endH, endM)}`;
+                        }
+
+                        scheduleData.push({
+                            id: scheduleData.length + 1,
+                            date: dateStr,
+                            dayName: daysMap[dayIdx],
+                            start: formatTime(startH, startM),
+                            end: formatTime(endH, endM),
+                            timeHTML: timeDisplay,
+                            hours: sessionHrs,
+                            realDate: new Date(currentDate)
+                        });
+                        hoursScheduled += sessionHrs;
+                    }
+                    currentDate.setDate(currentDate.getDate() + 1);
+                    loopCount++;
+                }
+
+                renderTable();
+                updateDashboard();
+                
+                localStorage.setItem('x_academy_schedule', JSON.stringify({
+                    trainee: document.getElementById('traineeName').value,
+                    course: document.getElementById('courseName').value,
+                    data: scheduleData
+                }));
+                
+                // 🔥 10. Gamification Sounds & Confetti
+                triggerConfetti();
+                playGenerateSound();
+                showToast('Schedule Generated Successfully! ✔️', 'success');
+
+            }, 600); // 600ms fake loading for visual satisfaction
+        }
+
+        // ⚫ 7. Inline Modal for Editing
+        function renderTable() {
+            const body = document.getElementById('resultBody');
+            body.innerHTML = scheduleData.map((r, index) => `
+                <tr class="hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer transition group" onclick="editSession(${index})">
+                    <td class="p-3 text-gray-400 group-hover:text-[#099999] transition">${r.id}</td>
+                    <td class="p-3 font-bold">${r.date} <span class="text-[10px] font-normal text-gray-400 block">${r.dayName}</span></td>
+                    <td class="p-3 text-[#099999] leading-tight">${r.timeHTML}</td>
+                    <td class="p-3 text-right font-bold">${r.hours}h</td>
+                </tr>
+            `).join('');
+        }
+
+        function editSession(index) {
+            currentEditIndex = index;
+            document.getElementById('editSessionDate').value = scheduleData[index].date;
+            const modal = document.getElementById('editModal');
+            const content = document.getElementById('editModalContent');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeEditModal() {
+            const modal = document.getElementById('editModal');
+            const content = document.getElementById('editModalContent');
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }, 300);
+        }
+
+        function deleteSessionBtn() {
+            scheduleData.splice(currentEditIndex, 1);
+            finishEdit();
+        }
+
+        function saveEditSession() {
+            const newDate = document.getElementById('editSessionDate').value;
+            if(newDate) {
+                scheduleData[currentEditIndex].date = newDate;
+                scheduleData[currentEditIndex].dayName = daysMap[new Date(newDate).getDay()];
+            }
+            finishEdit();
+        }
+
+        function finishEdit() {
+            closeEditModal();
+            scheduleData.forEach((s, i) => s.id = i + 1);
+            renderTable();
+            updateDashboard();
+        }
+
+        function updateDashboard() {
             document.getElementById('resTotalSessions').innerText = scheduleData.length;
-            document.getElementById('resTotalHours').innerText = hoursScheduled;
+            const totalH = scheduleData.reduce((sum, s) => sum + s.hours, 0);
+            document.getElementById('resTotalHours').innerText = totalH;
+            
+            if(scheduleData.length > 0) {
+                const first = new Date(scheduleData[0].date);
+                const last = new Date(scheduleData[scheduleData.length-1].date);
+                const diffTime = Math.abs(last - first);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; 
+                
+                document.getElementById('resDuration').innerText = `${diffDays} D`;
+                document.getElementById('resEndDate').innerText = scheduleData[scheduleData.length-1].date;
+            }
         }
 
         function addExcludedDate() {
@@ -518,11 +760,57 @@
             if(date && !excludedDates.includes(date)) {
                 excludedDates.push(date);
                 document.getElementById('excludedList').innerHTML += `
-                    <div class="bg-red-500/10 border border-red-500/20 p-2 rounded text-xs flex justify-between">
-                        ${date} <i class="fa-solid fa-xmark cursor-pointer" onclick="this.parentElement.remove()"></i>
+                    <div class="bg-red-500/10 border border-red-500/20 p-2 rounded text-xs flex justify-between items-center mb-2">
+                        ${date} <button onclick="this.parentElement.remove()" class="text-red-500 hover:text-white hover:bg-red-500 w-5 h-5 rounded-full transition"><i class="fa-solid fa-xmark"></i></button>
                     </div>
                 `;
+                document.getElementById('newExcludedDate').value = '';
             }
+        }
+
+        function loadSchedule() {
+            const saved = localStorage.getItem('x_academy_schedule');
+            if(saved) {
+                const data = JSON.parse(saved);
+                document.getElementById('traineeName').value = data.trainee;
+                document.getElementById('courseName').value = data.course;
+                scheduleData = data.data;
+                currentStep = 5;
+                updateUI();
+                renderTable();
+                updateDashboard();
+                showToast('Loaded Successfully!', 'success');
+            } else {
+                showToast('No saved schedule found.');
+            }
+        }
+
+        function shareLink() {
+            const url = new URL(window.location.origin + window.location.pathname);
+            url.searchParams.set('name', document.getElementById('traineeName').value);
+            url.searchParams.set('course', document.getElementById('courseName').value);
+            url.searchParams.set('start', document.getElementById('startDate').value);
+            
+            navigator.clipboard.writeText(url.toString()).then(() => {
+                showToast('Link copied to clipboard! 🔥', 'success');
+            });
+        }
+
+        function parseUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            if(params.has('name')) document.getElementById('traineeName').value = params.get('name');
+            if(params.has('course')) document.getElementById('courseName').value = params.get('course');
+            if(params.has('start')) document.getElementById('startDate').value = params.get('start');
+        }
+
+        function exportCalendar() {
+            if(scheduleData.length === 0) return showToast('No data to export');
+            let gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(document.getElementById('courseName').value)}&details=${encodeURIComponent('Trainee: ' + document.getElementById('traineeName').value)}`;
+            const first = scheduleData[0];
+            const formatGCalDate = (d, t) => d.replace(/-/g, '') + 'T' + t.replace(':', '') + '00';
+            gcalUrl += `&dates=${formatGCalDate(first.date, first.start)}/${formatGCalDate(first.date, first.end)}`;
+            window.open(gcalUrl, '_blank');
+            showToast('Opening Google Calendar...', 'success');
         }
 
         function exportPDF() {
@@ -530,37 +818,27 @@
             const doc = new jsPDF();
             const trainee = document.getElementById('traineeName').value || 'Trainee';
             const course = document.getElementById('courseName').value || 'Course';
+            const group = document.getElementById('groupName').value || 'Individual';
 
-            doc.setFillColor(9, 153, 153);
-            doc.rect(0, 0, 210, 45, 'F');
-            
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(24);
-            doc.setFont("helvetica", "bold");
+            doc.setFillColor(9, 153, 153); doc.rect(0, 0, 210, 45, 'F');
+            doc.setTextColor(255, 255, 255); doc.setFontSize(24); doc.setFont("helvetica", "bold");
             doc.text("Training Schedule", 15, 25);
-            
-            doc.setFontSize(11);
-            doc.setFont("helvetica", "normal");
-            doc.text(`Trainee: ${trainee}`, 15, 36);
-            
+            doc.setFontSize(11); doc.setFont("helvetica", "normal");
+            doc.text(`Trainee: ${trainee} | ${group}`, 15, 36);
             if(logoBase64) doc.addImage(logoBase64, 'PNG', 165, 5, 30, 30, undefined, 'FAST');
 
-            doc.setFillColor(245, 247, 250);
-            doc.rect(0, 45, 210, 15, 'F');
-            doc.setTextColor(60, 60, 60);
-            doc.setFontSize(10);
+            doc.setFillColor(245, 247, 250); doc.rect(0, 45, 210, 15, 'F');
+            doc.setTextColor(60, 60, 60); doc.setFontSize(10);
             doc.text(`Course: ${course}`, 15, 55);
             
-            doc.autoTable({
-                startY: 65,
-                head: [['#', 'Date', 'Day', 'Time', 'Duration']],
-                body: scheduleData.map(r => [r.id, r.date, r.dayName, r.time, r.hours + ' hrs']),
-                theme: 'striped',
-                headStyles: { fillColor: [9, 153, 153], textColor: 255, fontStyle: 'bold' },
-                styles: { fontSize: 10, cellPadding: 4 },
-                alternateRowStyles: { fillColor: [240, 253, 250] }
-            });
+            const cleanData = scheduleData.map(r => [r.id, r.date, r.dayName, r.timeHTML.replace(/<[^>]*>?/gm, ' '), r.hours + 'h']);
 
+            doc.autoTable({
+                startY: 65, head: [['#', 'Date', 'Day', 'Time', 'Duration']],
+                body: cleanData, theme: 'striped',
+                headStyles: { fillColor: [9, 153, 153], textColor: 255, fontStyle: 'bold' },
+                styles: { fontSize: 10, cellPadding: 4 }, alternateRowStyles: { fillColor: [240, 253, 250] }
+            });
             doc.save(`${trainee.replace(/\s/g,'_')}_Schedule.pdf`);
         }
 
@@ -569,8 +847,9 @@
             const course = document.getElementById('courseName').value || 'Course';
             const wb = XLSX.utils.book_new();
             const ws_data = [
-                ["X ACADEMY TRAINING SCHEDULE"],
-                [""], ["Trainee", trainee], ["Course", course], ["Generated", new Date().toLocaleDateString()], [""],
+                ["X ACADEMY TRAINING SCHEDULE"], [""], 
+                ["Trainee", trainee], ["Course", course], 
+                ["Generated", new Date().toLocaleDateString()], [""],
                 ["Session", "Date", "Day", "Start Time", "End Time", "Hours"]
             ];
             scheduleData.forEach(r => ws_data.push([r.id, r.date, r.dayName, r.start, r.end, r.hours]));
@@ -580,14 +859,8 @@
             XLSX.writeFile(wb, `${trainee}_Schedule.xlsx`);
         }
 
-        function triggerConfetti() {
-            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#099999', '#ffffff'] });
-        }
-
-        function resetApp() { if(confirm("Start new?")) window.location.reload(); }
-
-        // Initial setup
-        updateUI();
+        function triggerConfetti() { confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#099999', '#ffffff'] }); }
+        function resetApp() { if(confirm("Start new?")) window.location.href = window.location.pathname; }
     </script>
 </body>
 </html>
